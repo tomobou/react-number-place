@@ -1,0 +1,64 @@
+.game {
+    display: flex;
+    flex-direction: column;
+}
+
+.square {
+    width: 30px;
+    height: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 0px;
+    text-align: center;
+    float: left;
+
+    background: #fff;
+    border: 1px solid #999;
+    margin-top: -1px;
+}
+
+
+.block-row:after {
+    clear: left;
+    content: "";
+    display: block;
+}
+
+.board-block{
+    float: left;
+    border: 2px solid #999;
+}
+
+.board-row{
+    width: 400px;
+}
+
+.board-row:after {
+    clear: left;
+    content: "";
+    display: block;
+}
+
+
+.number-selector-row{
+    margin-top: 20px;
+    width: 400px;
+}
+
+.number-selector {
+    width: 30px;
+    height: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 0px;
+    text-align: center;
+    float: left;
+
+    background: #FFC;
+    border: 1px solid #000;
+    margin-top: -1px;
+}
+
+.selected {
+    background: #99F;
+}
