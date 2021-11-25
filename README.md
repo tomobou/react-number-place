@@ -11,6 +11,9 @@ v16.13.0
 8.1.4
 ```
 
+## 動作
+
+- https://tomobou.github.io/react-number-place/
 
 ## 参考
 
