@@ -68,7 +68,8 @@ class Game extends React.Component {
         super(props);
         this.state = {
             squares: Array(9).fill(null).map(x => Array(9).fill(null)),
-            selectValue: " "
+            selectValue: " ",
+            predictText: ""
         };
     }
     handleClick(row,col) {
@@ -83,6 +84,22 @@ class Game extends React.Component {
             selectValue: value
         }));
     }
+    handleNextCandidate(){
+        let prediction = calcCandidates(this.state.squares)
+        if(prediction.hasPrediction){
+            let squares = this.state.squares;
+            let predictText = "["+(prediction.row+1)+"]行["+(prediction.col+1)+"]列目は"+prediction.value+"です。"
+            squares[prediction.row][prediction.col] = prediction.value.toString()
+            this.setState(state => ({
+                squares: squares,
+                predictText: predictText
+            }));
+        }else{
+            this.setState(state => ({
+                predictText: "次の候補は見つかりませんでした"
+            }));
+        }
+    }
     render(){
         return (
             <div className="game">
@@ -91,9 +108,106 @@ class Game extends React.Component {
                     onClick={(row,col) => this.handleClick(row,col)}
                 />
                 <NumberSelector selectValue={this.state.selectValue} onClick={(value) => this.handleSelect(value)}/>
+                <NextCandidate predictText={this.state.predictText} onClick={() => this.handleNextCandidate()}></NextCandidate>
             </div>
         )
     }
+}
+
+function calcCandidates(squares){
+    let prediction = squares.map(function(row){
+        return row.map(function(cell) {
+            let value = ("1"<=cell&&cell<="9")? Number(cell) : null;
+            let candidates = ("1"<=cell&&cell<="9")? [] : Array.from({length: 9}, (_, index) => index+1);
+            return { 
+                value: value,
+                candidates: candidates
+            }
+        })
+    })
+    let conditions = createConditions(prediction)
+    updateCandidatesForPlaceValue(conditions)
+
+    let result = checkPrediction(prediction)
+    if(result.hasPrediction){
+        return result
+    }
+
+    console.log(prediction)
+    console.log(conditions)
+
+
+    return {
+        hasPrediction: false
+    }
+}
+
+function checkPrediction(prediction){
+    for(let i = 0; i < 9; i++){
+        for(let j = 0; j < 9; j++){
+            let candidates = prediction[i][j].candidates
+            if(prediction[i][j].candidates.length === 1){
+                return {
+                    hasPrediction: true,
+                    row: i,
+                    col: j,
+                    value: candidates[0]
+                }
+            }
+        }
+    }
+    return {
+        hasPrediction: false
+    }
+}
+
+function updateCandidatesForPlaceValue(conditions){     
+    conditions.forEach(condition => {
+        let definiteValues = condition.filter(place => place.value !== null).map(place => place.value)
+        condition.forEach(place => {
+            place.candidates = place.candidates.filter((candidate) => !definiteValues.some((defValue) => candidate === defValue))
+        })
+    });
+}
+
+function createConditions(prediction){
+    let conditions = Array(27)
+    let idx = 0
+    //row conditions
+    prediction.forEach(element => {
+        conditions[idx++] = element
+    });
+    //column conditions
+    for(let i = 0; i < 9; i++){
+        conditions[idx++] = prediction.map(row => row[i])
+    }
+    // block conditions
+    for(let i = 0; i < 9; i=i+3){
+        for(let j = 0; j < 9; j=j+3){
+            conditions[idx++] = [
+                prediction[i][j],
+                prediction[i][j+1],
+                prediction[i][j+2],
+                prediction[i+1][j],
+                prediction[i+1][j+1],
+                prediction[i+1][j+2],
+                prediction[i+2][j],
+                prediction[i+2][j+1],
+                prediction[i+2][j+2],
+            ]
+        }
+    }
+    return conditions
+}
+
+
+function NextCandidate(props){
+    return (
+        <div>
+        <button onClick={props.onClick}>next</button>
+        <span>{props.predictText}</span>
+        </div>
+    )
 }
 
 class NumberSelector extends React.Component {
@@ -122,3 +236,6 @@ ReactDOM.render(
     <Game />,
     document.getElementById('root')
 );
+
+
+
