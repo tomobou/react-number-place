@@ -29,6 +29,9 @@
     border: 2px solid #999;
 }
 
+.board-top{
+    margin-left: 10px;
+}
 .board-row{
     width: 400px;
 }
@@ -57,8 +60,72 @@
     background: #FFC;
     border: 1px solid #000;
     margin-top: -1px;
+    margin-bottom: 30px;
 }
 
 .selected {
     background: #99F;
+}
+
+button {
+    cursor: pointer;
+}
+
+.save {
+    width: 80px;
+    height: 34px;
+    color: #fff;
+    text-align: center;
+    background-color: #09a690;
+    border-radius: 3px;
+    float: left;
+
+    margin-bottom: 30px;
+}
+.load {
+    width: 80px;
+    height: 34px;
+    color: #fff;
+    text-align: center;
+    background-color: #335588;
+    border-radius: 3px;
+    float: left;
+
+    margin-bottom: 30px;
+}
+.clear {
+    width: 80px;
+    height: 34px;
+    color: #fff;
+    text-align: center;
+    background-color: #DD6666;
+    border-radius: 3px;
+    float: left;
+
+    margin-left: 60px;
+    margin-bottom: 30px;
+}
+.button-row {
+    width: 400px;
+}
+.button-row:after {
+    clear: left;
+    content: "";
+    display: block;
+}
+
+.next-candidate {
+    width: 80px;
+    height: 34px;
+    color: #fff;
+    text-align: center;
+    background-color: #9955ff;
+    border-radius: 3px;
+
+    margin-bottom: 30px;
+    margin-right: 10px;
+}
+.next-candidate-text {
+    font-size: small;
+    color: #666677;
 }

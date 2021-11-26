@@ -53,7 +53,7 @@ class Board extends React.Component {
     render() {
         return (
             <div>
-                <div className="board-row">
+                <div className="board-top">
                     {this.renderBoardRow(0,0)}
                     {this.renderBoardRow(3,0)}
                     {this.renderBoardRow(6,0)}
@@ -100,6 +100,22 @@ class Game extends React.Component {
             }));
         }
     }
+    handleSaveSquares(){
+        console.log(this.state.squares)
+        localStorage.setItem('squares', this.state.squares)
+    }
+    handleLoadSquares(){
+        const savedValues = localStorage.getItem('squares').split(",")
+        const squares = Array(9).fill(null).map(function(_,index) { return savedValues.slice(index*9,(index+1)*9)})
+        this.setState(state => ({
+            squares: squares
+        }));
+    }
+    handleClearSquares(){
+        this.setState(state => ({
+            squares: Array(9).fill(null).map(x => Array(9).fill(null))
+        }));
+    }
     render(){
         return (
             <div className="game">
@@ -109,6 +125,11 @@ class Game extends React.Component {
                 />
                 <NumberSelector selectValue={this.state.selectValue} onClick={(value) => this.handleSelect(value)}/>
                 <NextCandidate predictText={this.state.predictText} onClick={() => this.handleNextCandidate()}></NextCandidate>
+                <div className="button-row">
+                    <Save onClick={() => this.handleSaveSquares()}></Save>
+                    <Load onClick={() => this.handleLoadSquares()}></Load>
+                    <Clear onClick={() => this.handleClearSquares()}></Clear>
+                </div>
             </div>
         )
     }
@@ -204,11 +225,29 @@ function createConditions(prediction){
 function NextCandidate(props){
     return (
         <div>
-        <button onClick={props.onClick}>next</button>
-        <span>{props.predictText}</span>
+            <button className="next-candidate" onClick={props.onClick}>next</button>
+            <span className="next-candidate-text">{props.predictText}</span>
         </div>
     )
 }
+
+function Save(props){
+    return (
+        <button className="save" onClick={props.onClick}>save</button>
+    )
+}
+
+function Load(props){
+    return (
+        <button className="load" onClick={props.onClick}>load</button>
+    )
+}
+function Clear(props){
+    return (
+        <button className="clear" onClick={props.onClick}>clear</button>
+    )
+}
+
 
 class NumberSelector extends React.Component {
     render(){
