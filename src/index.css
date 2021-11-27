@@ -114,7 +114,7 @@ button {
     display: block;
 }
 
-.next-candidate {
+.next-prediction {
     width: 80px;
     height: 34px;
     color: #fff;
@@ -125,7 +125,7 @@ button {
     margin-bottom: 30px;
     margin-right: 10px;
 }
-.next-candidate-text {
+.next-prediction-text {
     font-size: small;
     color: #666677;
 }

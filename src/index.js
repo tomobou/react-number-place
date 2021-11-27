@@ -64,7 +64,7 @@ class Board extends React.Component {
 }
 
 
-function calcCandidates(squares) {
+function calcPrediction(squares) {
     let prediction = squares.map(function (row, rowIndex) {
         return row.map(function (cell, colIndex) {
             let value = ("1" <= cell && cell <= "9") ? Number(cell) : null;
@@ -82,25 +82,26 @@ function calcCandidates(squares) {
 
     updateCandidatesForPlaceValue(conditions)
     let result = checkPrediction(prediction, "UNIQUE_PLACE")
-    if (result.hasPrediction) {
+    if (result != null) {
         return result
     }
 
     result = checkUniqueCandidate(conditions)
-    if (result.hasPrediction) {
+    if (result != null) {
         return result
     }
-
 
     console.log(prediction)
     console.log(conditions)
 
-
-    return {
-        hasPrediction: false
-    }
+    return null
 }
 
+/**
+ * 制約条件内の候補値を確認し、1箇所のみ候補に挙がっている値がある場合、該当箇所の候補として予測を返す。
+ * @param {*} conditions 
+ * @returns 
+ */
 function checkUniqueCandidate(conditions) {
     for (let condition of conditions) {
         const countGroupByPlace = condition.reduce(function (countGroupByPlace, place, index) {
@@ -115,7 +116,6 @@ function checkUniqueCandidate(conditions) {
             });
             return countGroupByPlace
         }, new Map());
-        console.log(countGroupByPlace)
         let result = null
         for (let pairList of countGroupByPlace.entries()) {
             if (pairList[1].length === 1) {
@@ -124,12 +124,11 @@ function checkUniqueCandidate(conditions) {
                 break;
             }
         }
-        console.log(result)
         if (result !== null) {
             return createPredictionObj(true, "UNIQUE_CANDIDATE", result.rowIndex, result.colIndex, result.candidate[0])
         }
     }
-    return createNoPredictionObj()
+    return null
 }
 
 function checkPrediction(prediction, checkedConditionType) {
@@ -141,28 +140,34 @@ function checkPrediction(prediction, checkedConditionType) {
             }
         }
     }
-    return createNoPredictionObj()
+    return null
 }
 
-function createNoPredictionObj() {
-    return createPredictionObj(false)
-}
-function createPredictionObj(hasPrediction, type, row, col, value) {
+/**
+ * 予測のオブジェクトを作成する
+ * @param {*} hasPrediction 
+ * @param {*} type 
+ * @param {*} row 
+ * @param {*} col 
+ * @param {*} value 
+ * @returns 
+ */
+function createPredictionObj(hasPrediction=false, type, row, col, value) {
     if (hasPrediction) {
         return {
-            hasPrediction: true,
             type: type,
             row: row,
             col: col,
             value: value
         }
-    } else {
-        return {
-            hasPrediction: false
-        }
-    }
+    } 
+    return null;
 }
 
+/**
+ * 既に入っている値と制約条件の組み合わせをもとに各場所(place)に入れられる候補値(candidates)を導出する。
+ * @param {*} conditions 制約条件
+ */
 function updateCandidatesForPlaceValue(conditions) {
     conditions.forEach(condition => {
         let definiteValues = condition.filter(place => place.value !== null).map(place => place.value)
@@ -203,11 +208,11 @@ function createConditions(prediction) {
 }
 
 
-function NextCandidate(props) {
+function NextPrediction(props) {
     return (
         <div>
-            <button className="next-candidate" onClick={props.onClick}>next</button>
-            <span className="next-candidate-text">{props.predictText}</span>
+            <button className="next-prediction" onClick={props.onClick}>next</button>
+            <span className="next-prediction-text">{props.predictText}</span>
         </div>
     )
 }
@@ -318,9 +323,9 @@ class Game extends React.Component {
             selectValue: value
         }));
     }
-    handleNextCandidate() {
-        let prediction = calcCandidates(this.state.squares)
-        if (prediction.hasPrediction) {
+    handleNextPrediction() {
+        let prediction = calcPrediction(this.state.squares)
+        if (prediction != null) {
             let squares = this.state.squares;
             let predictText = "[" + (prediction.row + 1) + "]行[" + (prediction.col + 1) + "]列目は" + prediction.value + "です。"
             squares[prediction.row][prediction.col] = prediction.value.toString()
@@ -361,7 +366,7 @@ class Game extends React.Component {
                     onClick={(row, col) => this.handleClick(row, col)}
                 />
                 <NumberSelector selectValue={this.state.selectValue} onClick={(value) => this.handleSelect(value)} />
-                <NextCandidate predictText={this.state.predictText} onClick={() => this.handleNextCandidate()}></NextCandidate>
+                <NextPrediction predictText={this.state.predictText} onClick={() => this.handleNextPrediction()}></NextPrediction>
                 <div className="button-row">
                     <Save onClick={() => this.handleSaveSquares()}></Save>
                     <Load onClick={() => this.handleLoadSquares()}></Load>
