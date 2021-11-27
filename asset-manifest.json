@@ -1,20 +1,20 @@
 {
   "files": {
-    "main.css": "/react-number-place/static/css/main.757fe880.chunk.css",
-    "main.js": "/react-number-place/static/js/main.7d0ef2d8.chunk.js",
-    "main.js.map": "/react-number-place/static/js/main.7d0ef2d8.chunk.js.map",
+    "main.css": "/react-number-place/static/css/main.c37fbcd0.chunk.css",
+    "main.js": "/react-number-place/static/js/main.31d6c1a7.chunk.js",
+    "main.js.map": "/react-number-place/static/js/main.31d6c1a7.chunk.js.map",
     "runtime-main.js": "/react-number-place/static/js/runtime-main.17146117.js",
     "runtime-main.js.map": "/react-number-place/static/js/runtime-main.17146117.js.map",
     "static/js/2.9eaa5812.chunk.js": "/react-number-place/static/js/2.9eaa5812.chunk.js",
     "static/js/2.9eaa5812.chunk.js.map": "/react-number-place/static/js/2.9eaa5812.chunk.js.map",
     "index.html": "/react-number-place/index.html",
-    "static/css/main.757fe880.chunk.css.map": "/react-number-place/static/css/main.757fe880.chunk.css.map",
+    "static/css/main.c37fbcd0.chunk.css.map": "/react-number-place/static/css/main.c37fbcd0.chunk.css.map",
     "static/js/2.9eaa5812.chunk.js.LICENSE.txt": "/react-number-place/static/js/2.9eaa5812.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.17146117.js",
     "static/js/2.9eaa5812.chunk.js",
-    "static/css/main.757fe880.chunk.css",
-    "static/js/main.7d0ef2d8.chunk.js"
+    "static/css/main.c37fbcd0.chunk.css",
+    "static/js/main.31d6c1a7.chunk.js"
   ]
 }
