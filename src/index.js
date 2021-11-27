@@ -63,96 +63,34 @@ class Board extends React.Component {
     }
 }
 
-class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            squares: Array(9).fill(null).map(x => Array(9).fill(null)),
-            selectValue: " ",
-            predictText: ""
-        };
-    }
-    handleClick(row,col) {
-        var squares = this.state.squares.slice();
-        squares[row][col] = this.state.selectValue;
-        this.setState(state => ({
-            squares: squares
-        }));
-    }
-    handleSelect(value) {
-        this.setState(state => ({
-            selectValue: value
-        }));
-    }
-    handleNextCandidate(){
-        let prediction = calcCandidates(this.state.squares)
-        if(prediction.hasPrediction){
-            let squares = this.state.squares;
-            let predictText = "["+(prediction.row+1)+"]行["+(prediction.col+1)+"]列目は"+prediction.value+"です。"
-            squares[prediction.row][prediction.col] = prediction.value.toString()
-            this.setState(state => ({
-                squares: squares,
-                predictText: predictText
-            }));
-        }else{
-            this.setState(state => ({
-                predictText: "次の候補は見つかりませんでした"
-            }));
-        }
-    }
-    handleSaveSquares(){
-        console.log(this.state.squares)
-        localStorage.setItem('squares', this.state.squares)
-    }
-    handleLoadSquares(){
-        const savedValues = localStorage.getItem('squares').split(",")
-        const squares = Array(9).fill(null).map(function(_,index) { return savedValues.slice(index*9,(index+1)*9)})
-        this.setState(state => ({
-            squares: squares
-        }));
-    }
-    handleClearSquares(){
-        this.setState(state => ({
-            squares: Array(9).fill(null).map(x => Array(9).fill(null))
-        }));
-    }
-    render(){
-        return (
-            <div className="game">
-                <Board 
-                    squares={this.state.squares}
-                    onClick={(row,col) => this.handleClick(row,col)}
-                />
-                <NumberSelector selectValue={this.state.selectValue} onClick={(value) => this.handleSelect(value)}/>
-                <NextCandidate predictText={this.state.predictText} onClick={() => this.handleNextCandidate()}></NextCandidate>
-                <div className="button-row">
-                    <Save onClick={() => this.handleSaveSquares()}></Save>
-                    <Load onClick={() => this.handleLoadSquares()}></Load>
-                    <Clear onClick={() => this.handleClearSquares()}></Clear>
-                </div>
-            </div>
-        )
-    }
-}
 
 function calcCandidates(squares){
-    let prediction = squares.map(function(row){
-        return row.map(function(cell) {
+    let prediction = squares.map(function(row, rowIndex){
+        return row.map(function(cell, colIndex) {
             let value = ("1"<=cell&&cell<="9")? Number(cell) : null;
             let candidates = ("1"<=cell&&cell<="9")? [] : Array.from({length: 9}, (_, index) => index+1);
             return { 
                 value: value,
-                candidates: candidates
+                candidates: candidates,
+                rowIndex: rowIndex,
+                colIndex: colIndex
             }
         })
     })
     let conditions = createConditions(prediction)
-    updateCandidatesForPlaceValue(conditions)
 
-    let result = checkPrediction(prediction)
+
+    updateCandidatesForPlaceValue(conditions)
+    let result = checkPrediction(prediction, "UNIQUE_PLACE")
     if(result.hasPrediction){
         return result
     }
+
+    result = checkUniqueCandidate(conditions)
+    if(result.hasPrediction){
+        return result
+    }
+    
 
     console.log(prediction)
     console.log(conditions)
@@ -163,22 +101,65 @@ function calcCandidates(squares){
     }
 }
 
-function checkPrediction(prediction){
+function checkUniqueCandidate(conditions){
+    for(let condition of conditions) {
+        const countGroupByPlace = condition.reduce(function (countGroupByPlace, place, index) {
+            place.candidates.forEach(candidate =>{
+                let countByPlace = countGroupByPlace.get(candidate)
+                if(countByPlace !== undefined){
+                    countByPlace.push(index)
+                    countGroupByPlace.set(candidate, countByPlace)
+                }else{
+                    countGroupByPlace.set(candidate, [ index ])
+                }
+            });
+            return countGroupByPlace
+        }, new Map());  
+        console.log(countGroupByPlace)
+        let result = null
+        for(let pairList of countGroupByPlace.entries()){
+            if(pairList[1].length === 1){
+                result = condition[pairList[1][0]]
+                result.candidate = [ pairList[0] ]
+                break;
+            }
+        }
+        console.log(result)
+        if(result !== null){
+            return  createPredictionObj(true,"UNIQUE_CANDIDATE",result.rowIndex,result.colIndex,result.candidate[0])
+        }    
+    }
+    return createNoPredictionObj()
+}
+
+function checkPrediction(prediction, checkedConditionType){
     for(let i = 0; i < 9; i++){
         for(let j = 0; j < 9; j++){
             let candidates = prediction[i][j].candidates
             if(prediction[i][j].candidates.length === 1){
-                return {
-                    hasPrediction: true,
-                    row: i,
-                    col: j,
-                    value: candidates[0]
-                }
+                return createPredictionObj(true,checkedConditionType,i,j,candidates[0])
             }
         }
     }
-    return {
-        hasPrediction: false
+    return createNoPredictionObj()
+}
+
+function createNoPredictionObj(){
+    return createPredictionObj(false)
+}
+function createPredictionObj(hasPrediction,type,row,col,value){
+    if(hasPrediction){
+        return {
+            hasPrediction: true,
+            type: type,
+            row: row,
+            col: col,
+            value: value
+        }
+    }else{
+        return {
+            hasPrediction: false
+        }
     }
 }
 
@@ -266,6 +247,127 @@ class NumberSelector extends React.Component {
                         <button key={"number-selector-"+index} className={className} onClick={() => this.props.onClick(value)}>{value}</button>
                     )
                 })}
+            </div>
+        )
+    }
+}
+
+class HistoryView extends React.Component {
+    render(){
+        let history = this.props.history.map( message => (
+            <div>{message}</div>
+        ))
+        return (
+            <div className="history-view">
+                {history}
+            </div>
+        )
+    }
+}
+
+
+class Game extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            squares: Array(9).fill(null).map(x => Array(9).fill(null)),
+            selectValue: " ",
+            predictText: "",
+            history: []
+        };
+    }
+    getPredictionTypeMessage(type){
+        switch(type){
+            case "UNIQUE_PLACE": return "値確定";
+            case "UNIQUE_CANDIDATE": return "条件確定";
+            default: return type;
+        }
+    }
+    getSetValueHistoryPrediction(prediction){
+        return this.getSetValueHistoryMessage(prediction.row,prediction.col,prediction.value,this.getPredictionTypeMessage(prediction.type))
+    }
+    getSetValueHistoryMessage(row,col,value,typeMessage){
+        return "[↓"+(row+1)+"][→"+(col+1)+"]＝"+value+"("+typeMessage+")";
+    }
+    clearHistory(message=null){
+        let history = [];
+        if(message !== null){
+            history.push(message)
+        }
+        this.setState(state => ({
+            history: history
+        }));
+    }
+    addHistory(message){
+        let history = this.state.history;
+        history.push(message)
+        this.setState(state => ({
+            history: history
+        }));
+    }
+    handleClick(row,col) {
+        let squares = this.state.squares.slice();
+        squares[row][col] = this.state.selectValue;
+        this.setState(state => ({
+            squares: squares
+        }));
+        this.addHistory(this.getSetValueHistoryMessage(row,col,this.state.selectValue,"ユーザー"))
+    }
+    handleSelect(value) {
+        this.setState(state => ({
+            selectValue: value
+        }));
+    }
+    handleNextCandidate(){
+        let prediction = calcCandidates(this.state.squares)
+        if(prediction.hasPrediction){
+            let squares = this.state.squares;
+            let predictText = "["+(prediction.row+1)+"]行["+(prediction.col+1)+"]列目は"+prediction.value+"です。"
+            squares[prediction.row][prediction.col] = prediction.value.toString()
+            this.setState(state => ({
+                squares: squares,
+                predictText: predictText
+            }));
+            this.addHistory(this.getSetValueHistoryPrediction(prediction))
+        }else{
+            this.setState(state => ({
+                predictText: "次の候補は見つかりませんでした"
+            }));
+        }
+    }
+    handleSaveSquares(){
+        console.log(this.state.squares)
+        localStorage.setItem('squares', this.state.squares)
+    }
+    handleLoadSquares(){
+        const savedValues = localStorage.getItem('squares').split(",")
+        const squares = Array(9).fill(null).map(function(_,index) { return savedValues.slice(index*9,(index+1)*9)})
+        this.setState(state => ({
+            squares: squares
+        }));
+        this.clearHistory("ロードしました")
+    }
+    handleClearSquares(){
+        this.setState(state => ({
+            squares: Array(9).fill(null).map(x => Array(9).fill(null))
+        }));
+        this.clearHistory()
+    }
+    render(){
+        return (
+            <div className="game">
+                <Board 
+                    squares={this.state.squares}
+                    onClick={(row,col) => this.handleClick(row,col)}
+                />
+                <NumberSelector selectValue={this.state.selectValue} onClick={(value) => this.handleSelect(value)}/>
+                <NextCandidate predictText={this.state.predictText} onClick={() => this.handleNextCandidate()}></NextCandidate>
+                <div className="button-row">
+                    <Save onClick={() => this.handleSaveSquares()}></Save>
+                    <Load onClick={() => this.handleLoadSquares()}></Load>
+                    <Clear onClick={() => this.handleClearSquares()}></Clear>
+                </div>
+                <HistoryView history={this.state.history}></HistoryView>
             </div>
         )
     }

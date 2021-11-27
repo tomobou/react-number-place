@@ -129,3 +129,10 @@ button {
     font-size: small;
     color: #666677;
 }
+
+.history-view{
+    width: 300px;
+    height: 200px;
+    overflow-y: scroll;
+    font-size: smaller;
+}
