@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-interface SquareProps{
+interface SquareProps {
     onClick: () => void,
     value: string
 }
@@ -17,13 +17,13 @@ class Square extends React.Component<SquareProps> {
     }
 }
 
-interface BoardProps{
-    onClick: (row:number,col:number) => void,
+interface BoardProps {
+    onClick: (row: number, col: number) => void,
     squares: Array<Array<string>>
 }
 
 class Board extends React.Component<BoardProps> {
-    renderBoardRow(row:number, startCol:number) {
+    renderBoardRow(row: number, startCol: number) {
         const blockSize = 3
         return (
             <div className="board-row">
@@ -33,7 +33,7 @@ class Board extends React.Component<BoardProps> {
             </div>
         );
     }
-    renderBlock(startRow:number, col:number) {
+    renderBlock(startRow: number, col: number) {
         return (
             <div className="board-block">
                 {this.renderBlockRow(startRow, col)}
@@ -42,7 +42,7 @@ class Board extends React.Component<BoardProps> {
             </div>
         );
     }
-    renderBlockRow(row:number, startCol:number) {
+    renderBlockRow(row: number, startCol: number) {
         return (
             <div className="block-row">
                 {this.renderSquare(row, startCol)}
@@ -51,7 +51,7 @@ class Board extends React.Component<BoardProps> {
             </div>
         );
     }
-    renderSquare(row:number, col:number) {
+    renderSquare(row: number, col: number) {
         return (
             <Square
                 value={this.props.squares[row][col]}
@@ -82,9 +82,9 @@ interface Place {
 }
 
 
-function calcPrediction(squares:Array<Array<string>>) {
+function calcPrediction(squares: Array<Array<string>>) {
     let places = squares.map(function (row, rowIndex) {
-        return row.map(function (cell, colIndex):Place {
+        return row.map(function (cell, colIndex): Place {
             let value = ("1" <= cell && cell <= "9") ? Number(cell) : null;
             let candidates = ("1" <= cell && cell <= "9") ? [] : Array.from({ length: 9 }, (_, index) => index + 1);
             return {
@@ -120,9 +120,9 @@ function calcPrediction(squares:Array<Array<string>>) {
  * @param {*} conditions 
  * @returns 
  */
-function checkUniqueCandidate(conditions:Array<Place[]>) {
+function checkUniqueCandidate(conditions: Array<Place[]>) {
     for (let condition of conditions) {
-        let countGroupByPlace = new Map<number,number>()
+        let countGroupByPlace = new Map<number, number>()
         condition.forEach(function (place, index) {
             place.candidates.forEach(candidate => {
                 let countByPlace = countGroupByPlace.get(candidate)
@@ -137,7 +137,7 @@ function checkUniqueCandidate(conditions:Array<Place[]>) {
         for (let pairList of [...countGroupByPlace.entries()]) {
             const key = pairList[0]
             const value = pairList[1]
-            if(value != null){
+            if (value != null) {
                 if (value !== -1) {
                     let result = condition[value];
                     result.candidates = [key];
@@ -149,7 +149,7 @@ function checkUniqueCandidate(conditions:Array<Place[]>) {
     return null
 }
 
-function checkPrediction(prediction:Place[][], checkedConditionType:string):Prediction|null {
+function checkPrediction(prediction: Place[][], checkedConditionType: string): Prediction | null {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             let candidates = prediction[i][j].candidates
@@ -176,7 +176,7 @@ interface Prediction {
  * @param {*} value 
  * @returns 
  */
-function createPredictionObj(type:string, row:number, col:number, value:number):Prediction {
+function createPredictionObj(type: string, row: number, col: number, value: number): Prediction {
     return {
         type: type,
         row: row,
@@ -189,7 +189,7 @@ function createPredictionObj(type:string, row:number, col:number, value:number):
  * 既に入っている値と制約条件の組み合わせをもとに各場所(place)に入れられる候補値(candidates)を導出する。
  * @param {*} conditions 制約条件
  */
-function updateCandidatesForPlaceValue(conditions:Array<Place[]>) {
+function updateCandidatesForPlaceValue(conditions: Array<Place[]>) {
     conditions.forEach(condition => {
         let definiteValues = condition.filter(place => place.value !== null).map(place => place.value)
         condition.forEach(place => {
@@ -198,7 +198,7 @@ function updateCandidatesForPlaceValue(conditions:Array<Place[]>) {
     });
 }
 
-function createConditions(places:Place[][]):Array<Place[]> {
+function createConditions(places: Place[][]): Array<Place[]> {
     let conditions = Array<Place[]>(27)
     let idx = 0
     //row conditions
@@ -228,12 +228,12 @@ function createConditions(places:Place[][]):Array<Place[]> {
     return conditions
 }
 
-interface NextPredictionProps{
+interface NextPredictionProps {
     onClick: () => void,
     predictText: string
 }
 
-function NextPrediction(props:NextPredictionProps) {
+function NextPrediction(props: NextPredictionProps) {
     return (
         <div>
             <button className="next-prediction" onClick={props.onClick}>next</button>
@@ -242,22 +242,22 @@ function NextPrediction(props:NextPredictionProps) {
     )
 }
 
-interface ClickActionProps{
+interface ClickActionProps {
     onClick: () => void
 }
 
-function Save(props:ClickActionProps) {
+function Save(props: ClickActionProps) {
     return (
         <button className="save" onClick={props.onClick}>save</button>
     )
 }
 
-function Load(props:ClickActionProps) {
+function Load(props: ClickActionProps) {
     return (
         <button className="load" onClick={props.onClick}>load</button>
     )
 }
-function Clear(props:ClickActionProps) {
+function Clear(props: ClickActionProps) {
     return (
         <button className="clear" onClick={props.onClick}>clear</button>
     )
@@ -265,7 +265,7 @@ function Clear(props:ClickActionProps) {
 
 interface NumberSelectorProps {
     selectValue: string,
-    onClick: (value:string) => void
+    onClick: (value: string) => void
 }
 
 class NumberSelector extends React.Component<NumberSelectorProps> {
@@ -310,7 +310,7 @@ class HistoryView extends React.Component<HistoryViewProps> {
 interface GameProps {
 
 }
-interface GameStates{
+interface GameStates {
     squares: Array<Array<string>>,
     selectValue: string,
     predictText: string,
@@ -318,7 +318,7 @@ interface GameStates{
 }
 
 
-class Game extends React.Component<GameProps,GameStates> {
+class Game extends React.Component<GameProps, GameStates> {
     constructor(props: GameProps | Readonly<GameProps>) {
         super(props);
         this.state = {
@@ -328,21 +328,21 @@ class Game extends React.Component<GameProps,GameStates> {
             history: []
         };
     }
-    getPredictionTypeMessage(type:string) {
+    getPredictionTypeMessage(type: string) {
         switch (type) {
             case "UNIQUE_PLACE": return "値確定";
             case "UNIQUE_CANDIDATE": return "条件確定";
             default: return type;
         }
     }
-    getSetValueHistoryPrediction(prediction:Prediction) {
+    getSetValueHistoryPrediction(prediction: Prediction) {
         return this.getSetValueHistoryMessage(prediction.row, prediction.col, prediction.value.toString(), this.getPredictionTypeMessage(prediction.type))
     }
-    getSetValueHistoryMessage(row:number, col:number, value:string, typeMessage:string) {
+    getSetValueHistoryMessage(row: number, col: number, value: string, typeMessage: string) {
         return "[↓" + (row + 1) + "][→" + (col + 1) + "]＝" + value + "(" + typeMessage + ")";
     }
-    clearHistory(message:string = "" ) {
-        let history:string[] = [];
+    clearHistory(message: string = "") {
+        let history: string[] = [];
         if (message !== "") {
             history.push(message)
         }
@@ -350,14 +350,14 @@ class Game extends React.Component<GameProps,GameStates> {
             history: history
         }));
     }
-    addHistory(message:string) {
+    addHistory(message: string) {
         let history = this.state.history;
         history.push(message)
         this.setState(state => ({
             history: history
         }));
     }
-    handleClick(row:number, col:number) {
+    handleClick(row: number, col: number) {
         let squares = this.state.squares.slice();
         squares[row][col] = this.state.selectValue;
         this.setState(state => ({
@@ -365,7 +365,7 @@ class Game extends React.Component<GameProps,GameStates> {
         }));
         this.addHistory(this.getSetValueHistoryMessage(row, col, this.state.selectValue, "ユーザー"))
     }
-    handleSelect(value:string) {
+    handleSelect(value: string) {
         this.setState(state => ({
             selectValue: value
         }));
@@ -393,7 +393,7 @@ class Game extends React.Component<GameProps,GameStates> {
     }
     handleLoadSquares() {
         const savedValues = localStorage.getItem('squares')?.split(",")
-        if(savedValues != null){
+        if (savedValues != null) {
             const squares = Array(9).fill(null).map(function (_, index) { return savedValues.slice(index * 9, (index + 1) * 9) })
             this.setState(state => ({
                 squares: squares
