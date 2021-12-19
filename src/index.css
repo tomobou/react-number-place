@@ -1,3 +1,7 @@
+body{
+    font-size: 24px;
+}
+
 .game {
     display: flex;
     flex-direction: column;
@@ -6,7 +10,7 @@
 .square {
     width: 30px;
     height: 30px;
-    font-size: 24px;
+    font-size: inherit;
     font-weight: bold;
     padding: 0px;
     text-align: center;
@@ -15,8 +19,14 @@
     background: #fff;
     border: 1px solid #999;
     margin-top: -1px;
+
+    word-wrap:anywhere;
 }
 
+.candidates {
+    margin-top: 10px;
+    font-size: 10px;
+}
 
 .block-row:after {
     clear: left;
@@ -134,5 +144,5 @@ button {
     width: 300px;
     height: 200px;
     overflow-y: scroll;
-    font-size: smaller;
+    font-size: 16px;
 }

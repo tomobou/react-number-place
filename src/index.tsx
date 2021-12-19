@@ -19,7 +19,7 @@ class Square extends React.Component<SquareProps> {
 
 interface BoardProps {
     onClick: (row: number, col: number) => void,
-    squares: Array<Array<string>>
+    squares: string[][]
 }
 
 class Board extends React.Component<BoardProps> {
@@ -76,14 +76,13 @@ class Board extends React.Component<BoardProps> {
 
 interface Place {
     value: number | null,
-    candidates: Array<number>,
+    candidates: number[],
     rowIndex: number,
     colIndex: number
 }
 
-
-function calcPrediction(squares: Array<Array<string>>) {
-    let places = squares.map(function (row, rowIndex) {
+function calcPlaces(squares: string[][]){
+    return squares.map(function (row, rowIndex) {
         return row.map(function (cell, colIndex): Place {
             let value = ("1" <= cell && cell <= "9") ? Number(cell) : null;
             let candidates = ("1" <= cell && cell <= "9") ? [] : Array.from({ length: 9 }, (_, index) => index + 1);
@@ -95,11 +94,19 @@ function calcPrediction(squares: Array<Array<string>>) {
             }
         })
     })
-    let conditions = createConditions(places)
+}
 
+function calcPrediction(squares: string[][]) {
+    let places = calcPlaces(squares)
+    let conditions = createConditions(places)
 
     updateCandidatesForPlaceValue(conditions)
     let result = checkPrediction(places, "UNIQUE_PLACE")
+    if (result != null) {
+        return result
+    }
+    updateCandidatesForOverlapConditions(conditions)
+    result = checkPrediction(places, "OVERLAP_CONDITIONS")
     if (result != null) {
         return result
     }
@@ -116,11 +123,38 @@ function calcPrediction(squares: Array<Array<string>>) {
 }
 
 /**
+ * 2つの制約条件の重複マスにおいて、
+ * 一方の制約条件の重複マスにのみ存在する候補値xがある場合に、
+ * 他方の制約条件の重複マス以外の候補値xを削除する
+ * （重複マスはblock condition と row or col の組み合わせでしか発生しない）
+ * @param conditions 
+ */
+function updateCandidatesForOverlapConditions(conditions: Place[][]):Place[][]{
+    for(let blockCondition of conditions.slice(18)){
+        for(let otherCondition of conditions.slice(0,18)){
+            let overlap = blockCondition.filter( place => otherCondition.includes(place))
+            if(overlap.length > 0){
+                let overlapCandidates = new Set(...overlap.map(place => place.candidates))
+                for(let overlapValue of [...overlapCandidates.values()]){
+                    let overlapBlockLength = blockCondition.filter(place => !overlap.includes(place) && place.candidates.includes(overlapValue)).length
+                    let overlapOtherLength = otherCondition.filter(place => !overlap.includes(place) && place.candidates.includes(overlapValue)).length
+                    if(overlapBlockLength > 0 && overlapOtherLength === 0){
+                        blockCondition.filter(place => !overlap.includes(place)).forEach(place => place.candidates = place.candidates.filter(candidate => candidate !== overlapValue))
+                    }else if(overlapBlockLength === 0 && overlapOtherLength > 0){
+                        otherCondition.filter(place => !overlap.includes(place)).forEach(place => place.candidates = place.candidates.filter(candidate => candidate !== overlapValue))
+                    }                     
+                }
+            }
+        }
+    }
+    return conditions
+}
+/**
  * 制約条件内の候補値を確認し、1箇所のみ候補に挙がっている値がある場合、該当箇所の候補として予測を返す。
  * @param {*} conditions 
  * @returns 
  */
-function checkUniqueCandidate(conditions: Array<Place[]>) {
+function checkUniqueCandidate(conditions: Place[][]): Prediction| null {
     for (let condition of conditions) {
         let countGroupByPlace = new Map<number, number>()
         condition.forEach(function (place, index) {
@@ -189,16 +223,17 @@ function createPredictionObj(type: string, row: number, col: number, value: numb
  * 既に入っている値と制約条件の組み合わせをもとに各場所(place)に入れられる候補値(candidates)を導出する。
  * @param {*} conditions 制約条件
  */
-function updateCandidatesForPlaceValue(conditions: Array<Place[]>) {
+function updateCandidatesForPlaceValue(conditions: Place[][]) :Place[][]{
     conditions.forEach(condition => {
         let definiteValues = condition.filter(place => place.value !== null).map(place => place.value)
         condition.forEach(place => {
             place.candidates = place.candidates.filter((candidate) => !definiteValues.some((defValue) => candidate === defValue))
         })
     });
+    return conditions
 }
 
-function createConditions(places: Place[][]): Array<Place[]> {
+function createConditions(places: Place[][]): Place[][] {
     let conditions = Array<Place[]>(27)
     let idx = 0
     //row conditions
@@ -311,10 +346,11 @@ interface GameProps {
 
 }
 interface GameStates {
-    squares: Array<Array<string>>,
+    squares: string[][],
     selectValue: string,
     predictText: string,
-    history: string[]
+    history: string[],
+    candidatesList: string[][]
 }
 
 
@@ -325,12 +361,14 @@ class Game extends React.Component<GameProps, GameStates> {
             squares: Array(9).fill(null).map(x => Array(9).fill(null)),
             selectValue: " ",
             predictText: "",
-            history: []
+            history: [],
+            candidatesList: Array(9).fill(null).map(x => Array(9).fill(null))
         };
     }
     getPredictionTypeMessage(type: string) {
         switch (type) {
             case "UNIQUE_PLACE": return "値確定";
+            case "OVERLAP_CONDITIONS": return "重複排除値確定";
             case "UNIQUE_CANDIDATE": return "条件確定";
             default: return type;
         }
@@ -407,6 +445,27 @@ class Game extends React.Component<GameProps, GameStates> {
         }));
         this.clearHistory()
     }
+    updateCandidatesList(row:number){
+        let candidatesList:string[][]
+        if(row > 5){
+            candidatesList = updateCandidatesForPlaceValue(createConditions(calcPlaces(this.state.squares))).map(function(places) {
+                return places.map(function(place){
+                    return (place.value != null )? place.value.toString():place.candidates.join("") 
+                })
+            });
+        }else{
+            candidatesList = updateCandidatesForOverlapConditions(updateCandidatesForPlaceValue(createConditions(calcPlaces(this.state.squares)))).map(function(places) {
+                return places.map(function(place){
+                    return (place.value != null )? place.value.toString():place.candidates.join("") 
+                })
+            });
+        }
+
+        console.log(candidatesList)
+        this.setState(state => ({
+            candidatesList: candidatesList
+        }));
+    }
     render() {
         return (
             <div className="game">
@@ -422,6 +481,13 @@ class Game extends React.Component<GameProps, GameStates> {
                     <Clear onClick={() => this.handleClearSquares()}></Clear>
                 </div>
                 <HistoryView history={this.state.history}></HistoryView>
+                <div className="candidates">
+                    候補ビュー（5列目より上をクリックで重複排除値推定結果）
+                    <Board
+                        squares={this.state.candidatesList}
+                        onClick={(row, col) => this.updateCandidatesList(row)}
+                    />
+                </div>
             </div>
         )
     }
