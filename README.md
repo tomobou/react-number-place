@@ -28,6 +28,24 @@ v16.13.0
 8.1.4
 ```
 
+#### 暫定VerUp
+
+```
+>node -v
+v24.6.0
+
+>npm -v
+11.5.1
+
+```
+
+ ERR_OSSL_EVP_UNSUPPORTEDが発生。
+ 環境変数に下記をつけて起動して、暫定回避。
+```
+set NODE_OPTIONS=--openssl-legacy-provider
+```
+※参考： https://qiita.com/abcya/items/3f7a3d6d297336d0f1ea
+
 ## 動作
 github pagesで動作させるようにしています。
 
@@ -37,3 +55,4 @@ github pagesで動作させるようにしています。
 
 github pages への公開の仕方などを参考にさせていただきました。
 - https://qiita.com/EisKern/items/15dcf7864fa49df8f247
+
