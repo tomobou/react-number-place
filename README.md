@@ -18,33 +18,42 @@
 
 ## 開発
 
+## setup
+
+windows環境に　wingetというms標準のパッケージ管理ソフトがあることを知ったため使用して、Node.jsをインストール。
+
+```
+> winget search Node.js 
+名前          ID                バージョン 一致         ソース                                                                                                 
+--------------------------------------------------------------
+Node.js       OpenJS.NodeJS     24.6.0                  winget
+Nodist        Nodist.Nodist     0.10.3     Tag: node.js winget
+Volta         Volta.Volta       2.0.2      Tag: node.js winget
+Node.js (LTS) OpenJS.NodeJS.LTS 22.18.0                 winget  
+
+```
+
+```
+> winget install Node.js   
+```
+
+※npmにパスが通らなかったので、ターミナル再起動。
+
+type script は共通で使用すると思ったので、global installした。
+```
+npm install -g typescript 
+```
+
 ### node version
 
 ```
 > node -v
-v16.13.0
-
-> npm -v 
-8.1.4
-```
-
-#### 暫定VerUp
-
-```
->node -v
 v24.6.0
 
->npm -v
+> npm -v       
 11.5.1
-
 ```
 
- ERR_OSSL_EVP_UNSUPPORTEDが発生。
- 環境変数に下記をつけて起動して、暫定回避。
-```
-set NODE_OPTIONS=--openssl-legacy-provider
-```
-※参考： https://qiita.com/abcya/items/3f7a3d6d297336d0f1ea
 
 ## 動作
 github pagesで動作させるようにしています。
