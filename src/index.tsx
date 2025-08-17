@@ -111,13 +111,17 @@ function calcPrediction(squares: string[][]) {
         return result
     }
 
-    result = checkUniqueCandidate(conditions)
+    // 予約（Naked Pair/Triple/Quad）による候補除去
+    updateCandidatesForNakedReservations(conditions)
+    result = checkPrediction(places, "NAKED_RESERVATION")
     if (result != null) {
         return result
     }
 
-    console.log(places)
-    console.log(conditions)
+    result = checkUniqueCandidate(conditions)
+    if (result != null) {
+        return result
+    }
 
     return null
 }
@@ -149,6 +153,40 @@ function updateCandidatesForOverlapConditions(conditions: Place[][]):Place[][]{
     }
     return conditions
 }
+
+/**
+ * Naked Pair/Triple/Quad の候補除去
+ * @param conditions 制約条件（行・列・ブロックごとの Place[]）
+ */
+function updateCandidatesForNakedReservations(conditions: Place[][]): Place[][] {
+    for (const condition of conditions) {
+        // 2～4個の候補セットを持つマスを抽出
+        const candidateGroups = new Map<string, number[]>();
+        condition.forEach((place, idx) => {
+            if (place.candidates.length >= 2 && place.candidates.length <= 4) {
+                const key = place.candidates.sort().join(",");
+                if (!candidateGroups.has(key)) candidateGroups.set(key, []);
+                candidateGroups.get(key)!.push(idx);
+            }
+        });
+        // Naked Pair/Triple/Quad のみ処理
+        for (const [key, indices] of candidateGroups.entries()) {
+            const candidateArr = key.split(",").map(Number);
+            if (indices.length === candidateArr.length && indices.length >= 2) {
+                // 他のマスからこの候補セットの数字を除去
+                condition.forEach((place, idx) => {
+                    if (!indices.includes(idx)) {
+                        place.candidates = place.candidates.filter(c => !candidateArr.includes(c));
+                    }
+                });
+            }
+        }
+    }
+    return conditions;
+}
+
+
+
 /**
  * 制約条件内の候補値を確認し、1箇所のみ候補に挙がっている値がある場合、該当箇所の候補として予測を返す。
  * @param {*} conditions 
@@ -370,6 +408,7 @@ class Game extends React.Component<GameProps, GameStates> {
             case "UNIQUE_PLACE": return "値確定";
             case "OVERLAP_CONDITIONS": return "重複排除値確定";
             case "UNIQUE_CANDIDATE": return "条件確定";
+            case "NAKED_RESERVATION": return "予約排除後条件確定";
             default: return type;
         }
     }
@@ -449,6 +488,12 @@ class Game extends React.Component<GameProps, GameStates> {
         let candidatesList:string[][]
         if(row > 5){
             candidatesList = updateCandidatesForPlaceValue(createConditions(calcPlaces(this.state.squares))).map(function(places) {
+                return places.map(function(place){
+                    return (place.value != null )? place.value.toString():place.candidates.join("") 
+                })
+            });
+        }else if(row > 3){
+            candidatesList = updateCandidatesForNakedReservations(updateCandidatesForOverlapConditions(updateCandidatesForPlaceValue(createConditions(calcPlaces(this.state.squares))))).map(function(places) {
                 return places.map(function(place){
                     return (place.value != null )? place.value.toString():place.candidates.join("") 
                 })
