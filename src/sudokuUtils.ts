@@ -24,6 +24,10 @@ export function calcPlaces(squares: string[][]): Place[][] {
     })
 }
 
+/**
+ * 既に入っている値と制約条件の組み合わせをもとに各場所(place)に入れられる候補値(candidates)を導出する。
+ * @param {*} conditions 制約条件
+ */
 export function updateCandidatesForPlaceValue(conditions: Place[][]): Place[][] {
     conditions.forEach(condition => {
         let definiteValues = condition.filter(place => place.value !== null).map(place => place.value)
@@ -34,6 +38,13 @@ export function updateCandidatesForPlaceValue(conditions: Place[][]): Place[][] 
     return conditions
 }
 
+/**
+ * 2つの制約条件の重複マスにおいて、
+ * 一方の制約条件の重複マスにのみ存在する候補値xがある場合に、
+ * 他方の制約条件の重複マス以外の候補値xを削除する
+ * （重複マスはblock condition と row or col の組み合わせでしか発生しない）
+ * @param conditions 
+ */
 export function updateCandidatesForOverlapConditions(conditions: Place[][]): Place[][] {
     for (let blockCondition of conditions.slice(18)) {
         for (let otherCondition of conditions.slice(0, 18)) {
@@ -55,8 +66,13 @@ export function updateCandidatesForOverlapConditions(conditions: Place[][]): Pla
     return conditions
 }
 
+/**
+ * Naked Pair/Triple/Quad の候補除去
+ * @param conditions 制約条件（行・列・ブロックごとの Place[]）
+ */
 export function updateCandidatesForNakedReservations(conditions: Place[][]): Place[][] {
     for (const condition of conditions) {
+        // 2～4個の候補セットを持つマスを抽出
         const candidateGroups = new Map<string, number[]>();
         condition.forEach((place, idx) => {
             if (place.candidates.length >= 2 && place.candidates.length <= 4) {
@@ -65,9 +81,11 @@ export function updateCandidatesForNakedReservations(conditions: Place[][]): Pla
                 candidateGroups.get(key)!.push(idx);
             }
         });
+        // Naked Pair/Triple/Quad のみ処理
         for (const [key, indices] of candidateGroups.entries()) {
             const candidateArr = key.split(",").map(Number);
             if (indices.length === candidateArr.length && indices.length >= 2) {
+                // 他のマスからこの候補セットの数字を除去
                 condition.forEach((place, idx) => {
                     if (!indices.includes(idx)) {
                         place.candidates = place.candidates.filter(c => !candidateArr.includes(c));
@@ -86,6 +104,14 @@ export interface Prediction {
     value: number
 };
 
+/**
+ * 予測のオブジェクトを作成する
+ * @param {*} type 
+ * @param {*} row 
+ * @param {*} col 
+ * @param {*} value 
+ * @returns 
+ */
 export function createPredictionObj(type: string, row: number, col: number, value: number): Prediction {
     return {
         type: type,
@@ -107,6 +133,11 @@ export function checkPrediction(prediction: Place[][], checkedConditionType: str
     return null
 }
 
+/**
+ * 制約条件内の候補値を確認し、1箇所のみ候補に挙がっている値がある場合、該当箇所の候補として予測を返す。
+ * @param {*} conditions 
+ * @returns 
+ */
 export function checkUniqueCandidate(conditions: Place[][]): Prediction | null {
     for (let condition of conditions) {
         let countGroupByPlace = new Map<number, number>()
@@ -181,6 +212,7 @@ export function calcPrediction(squares: string[][]): Prediction | null {
         return result
     }
 
+    // 予約（Naked Pair/Triple/Quad）による候補除去
     updateCandidatesForNakedReservations(conditions)
     result = checkPrediction(places, "NAKED_RESERVATION")
     if (result != null) {
