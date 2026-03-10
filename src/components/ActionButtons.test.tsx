@@ -66,4 +66,78 @@ describe('Action Button Components', () => {
             expect(mockClick).toHaveBeenCalledTimes(1);
         });
     });
+
+    describe('Combined Action Buttons', () => {
+        test('should render all three action buttons together', () => {
+            const mockClick = jest.fn();
+            const { container } = render(
+                <div>
+                    <Save onClick={mockClick} />
+                    <Load onClick={mockClick} />
+                    <Clear onClick={mockClick} />
+                </div>
+            );
+
+            expect(screen.getByRole('button', { name: 'save' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'load' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'clear' })).toBeInTheDocument();
+        });
+
+        test('should call correct callbacks for each button', () => {
+            const mockSave = jest.fn();
+            const mockLoad = jest.fn();
+            const mockClear = jest.fn();
+
+            const { container } = render(
+                <div>
+                    <Save onClick={mockSave} />
+                    <Load onClick={mockLoad} />
+                    <Clear onClick={mockClear} />
+                </div>
+            );
+
+            fireEvent.click(screen.getByRole('button', { name: 'save' }));
+            expect(mockSave).toHaveBeenCalledTimes(1);
+            expect(mockLoad).not.toHaveBeenCalled();
+            expect(mockClear).not.toHaveBeenCalled();
+
+            fireEvent.click(screen.getByRole('button', { name: 'load' }));
+            expect(mockLoad).toHaveBeenCalledTimes(1);
+            expect(mockClear).not.toHaveBeenCalled();
+
+            fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+            expect(mockClear).toHaveBeenCalledTimes(1);
+        });
+
+        test('should handle multiple clicks on same button', () => {
+            const mockClick = jest.fn();
+            render(<Save onClick={mockClick} />);
+
+            const button = screen.getByRole('button');
+            fireEvent.click(button);
+            fireEvent.click(button);
+            fireEvent.click(button);
+
+            expect(mockClick).toHaveBeenCalledTimes(3);
+        });
+
+        test('should have distinct CSS classes for each button', () => {
+            const mockClick = jest.fn();
+            render(
+                <div>
+                    <Save onClick={mockClick} />
+                    <Load onClick={mockClick} />
+                    <Clear onClick={mockClick} />
+                </div>
+            );
+
+            const saveBtn = screen.getByRole('button', { name: 'save' });
+            const loadBtn = screen.getByRole('button', { name: 'load' });
+            const clearBtn = screen.getByRole('button', { name: 'clear' });
+
+            expect(saveBtn).toHaveClass('save');
+            expect(loadBtn).toHaveClass('load');
+            expect(clearBtn).toHaveClass('clear');
+        });
+    });
 });
