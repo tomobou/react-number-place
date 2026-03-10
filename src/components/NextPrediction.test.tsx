@@ -46,4 +46,98 @@ describe('NextPrediction Component', () => {
         expect(screen.queryByText("Old text")).not.toBeInTheDocument();
         expect(screen.getByText("New text")).toBeInTheDocument();
     });
+
+    test('should call onClick multiple times when clicked multiple times', () => {
+        const mockClick = jest.fn();
+        render(<NextPrediction onClick={mockClick} predictText="" />);
+
+        const button = screen.getByRole('button', { name: 'next' });
+        fireEvent.click(button);
+        fireEvent.click(button);
+        fireEvent.click(button);
+
+        expect(mockClick).toHaveBeenCalledTimes(3);
+    });
+
+    test('should display empty prediction text', () => {
+        const mockClick = jest.fn();
+        const { container } = render(<NextPrediction onClick={mockClick} predictText="" />);
+
+        const textSpan = container.querySelector('.next-prediction-text');
+        expect(textSpan?.textContent).toBe('');
+    });
+
+    test('should display long prediction text', () => {
+        const mockClick = jest.fn();
+        const longText = 'Row 5, Column 7 is 3. This is a very detailed prediction message that might be long.';
+        render(<NextPrediction onClick={mockClick} predictText={longText} />);
+
+        expect(screen.getByText(longText)).toBeInTheDocument();
+    });
+
+    test('should handle special characters in prediction text', () => {
+        const mockClick = jest.fn();
+        const specialText = '[↓5][→3]＝7(値確定)';
+        render(<NextPrediction onClick={mockClick} predictText={specialText} />);
+
+        expect(screen.getByText(specialText)).toBeInTheDocument();
+    });
+
+    test('should render with both button and text visible', () => {
+        const mockClick = jest.fn();
+        const { container } = render(<NextPrediction onClick={mockClick} predictText="Test prediction" />);
+
+        const button = screen.getByRole('button', { name: 'next' });
+        const textSpan = container.querySelector('.next-prediction-text');
+
+        expect(button).toBeInTheDocument();
+        expect(textSpan).toBeInTheDocument();
+    });
+
+    test('should maintain button functionality after prediction update', () => {
+        const mockClick = jest.fn();
+        const { rerender } = render(<NextPrediction onClick={mockClick} predictText="First" />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'next' }));
+        expect(mockClick).toHaveBeenCalledTimes(1);
+
+        rerender(<NextPrediction onClick={mockClick} predictText="Second" />);
+        fireEvent.click(screen.getByRole('button', { name: 'next' }));
+        expect(mockClick).toHaveBeenCalledTimes(2);
+    });
+
+    test('should have consistent CSS classes', () => {
+        const mockClick = jest.fn();
+        const { container } = render(<NextPrediction onClick={mockClick} predictText="" />);
+
+        const button = screen.getByRole('button');
+        const textSpan = container.querySelector('.next-prediction-text');
+
+        expect(button).toHaveClass('next-prediction');
+        expect(textSpan).toHaveClass('next-prediction-text');
+    });
+
+    test('should handle transition from empty to filled text', () => {
+        const mockClick = jest.fn();
+        const { rerender, container } = render(<NextPrediction onClick={mockClick} predictText="" />);
+
+        let textSpan = container.querySelector('.next-prediction-text');
+        expect(textSpan?.textContent).toBe('');
+
+        rerender(<NextPrediction onClick={mockClick} predictText="Now filled" />);
+        textSpan = container.querySelector('.next-prediction-text');
+        expect(textSpan?.textContent).toBe('Now filled');
+    });
+
+    test('should respond to rapid prop changes', () => {
+        const mockClick = jest.fn();
+        const { rerender } = render(<NextPrediction onClick={mockClick} predictText="Text 1" />);
+
+        expect(screen.getByText('Text 1')).toBeInTheDocument();
+
+        for (let i = 2; i <= 5; i++) {
+            rerender(<NextPrediction onClick={mockClick} predictText={`Text ${i}`} />);
+            expect(screen.getByText(`Text ${i}`)).toBeInTheDocument();
+        }
+    });
 });

@@ -82,4 +82,105 @@ describe('Board Component', () => {
         buttons = container.querySelectorAll('.square');
         expect(buttons[0]).toHaveTextContent('9');
     });
+
+    test('should call onClick with correct parameters for various positions', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const buttons = container.querySelectorAll('.square');
+        
+        // Test corner positions
+        fireEvent.click(buttons[0]);
+        expect(mockClick).toHaveBeenCalledWith(0, 0);
+        
+        fireEvent.click(buttons[80]);
+        expect(mockClick).toHaveBeenCalledWith(8, 8);
+        
+        // Verify click handler works multiple times
+        expect(mockClick).toHaveBeenCalledTimes(2);
+    });
+
+    test('should render all 9 block sections', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const blocks = container.querySelectorAll('.board-block');
+        
+        expect(blocks.length).toBe(9);
+        expect(blocks[0]).toBeInTheDocument();
+        expect(blocks[8]).toBeInTheDocument();
+    });
+
+    test('should render block rows correctly', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const blockRows = container.querySelectorAll('.block-row');
+        
+        // Each 3x3 block has 3 rows
+        // 9 blocks * 3 rows each = 27 block-rows
+        expect(blockRows.length).toBe(27);
+    });
+
+    test('should handle rapid updates', () => {
+        const mockClick = jest.fn();
+        const { rerender } = render(<Board squares={Array(9).fill(null).map(() => Array(9).fill(' '))} onClick={mockClick} />);
+        
+        for (let i = 0; i < 5; i++) {
+            const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+            squares[i][i] = String(i + 1);
+            rerender(<Board squares={squares} onClick={mockClick} />);
+        }
+        
+        // Component should handle multiple updates without crashing
+        expect(mockClick).toBeDefined();
+    });
+
+    test('should handle board with all same values', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map(() => Array(9).fill('5'));
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const buttons = container.querySelectorAll('.square');
+        
+        buttons.forEach(button => {
+            expect(button).toHaveTextContent('5');
+        });
+    });
+
+    test('should maintain structure with mixed empty and filled squares', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map((_, i) => 
+            Array(9).fill(null).map((_, j) => i % 2 === 0 && j % 2 === 0 ? String(j + 1) : ' ')
+        );
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const buttons = container.querySelectorAll('.square');
+        
+        expect(buttons.length).toBe(81);
+        let filledCount = 0;
+        buttons.forEach((button, idx) => {
+            if (button.textContent !== ' ') {
+                filledCount++;
+            }
+        });
+        expect(filledCount).toBeGreaterThan(0);
+    });
+
+    test('should trigger onClick for every square click', () => {
+        const mockClick = jest.fn();
+        const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+        
+        const { container } = render(<Board squares={squares} onClick={mockClick} />);
+        const buttons = container.querySelectorAll('.square');
+        
+        for (let i = 0; i < 81; i += 10) {
+            fireEvent.click(buttons[i]);
+        }
+        
+        expect(mockClick).toHaveBeenCalledTimes(9);
+    });
 });
