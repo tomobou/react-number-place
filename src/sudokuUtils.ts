@@ -197,6 +197,207 @@ export function createConditions(places: Place[][]): Place[][] {
     return conditions
 }
 
+/**
+ * X-Wing テクニック (行単位)
+ * ある値が正確に2つの行のみに候補として存在し、
+ * それぞれの行で同じ2つの列に位置している場合、
+ * その2つの列において他の行からその値を削除する
+ * @param places 
+ */
+export function updateCandidatesForXWing(places: Place[][]): Place[][] {
+    // 各候補値についてチェック
+    for (let candidate = 1; candidate <= 9; candidate++) {
+        // 各行で候補値が存在する列を取得
+        const rowCandidates: Map<number, number[]> = new Map();
+        for (let row = 0; row < 9; row++) {
+            const cols: number[] = [];
+            for (let col = 0; col < 9; col++) {
+                if (places[row][col].value === null && places[row][col].candidates.includes(candidate)) {
+                    cols.push(col);
+                }
+            }
+            if (cols.length === 2) {
+                rowCandidates.set(row, cols);
+            }
+        }
+
+        // 正確に2つの行で同じ2列を共有しているかチェック
+        const rows = Array.from(rowCandidates.keys());
+        for (let i = 0; i < rows.length; i++) {
+            for (let j = i + 1; j < rows.length; j++) {
+                const row1 = rows[i];
+                const row2 = rows[j];
+                const cols1 = rowCandidates.get(row1)!;
+                const cols2 = rowCandidates.get(row2)!;
+
+                // 同じ列ペアの場合、X-Wingが成立
+                if (cols1[0] === cols2[0] && cols1[1] === cols2[1]) {
+                    // その2つの列において、row1とrow2以外から該当値を削除
+                    for (const col of cols1) {
+                        for (let row = 0; row < 9; row++) {
+                            if (row !== row1 && row !== row2) {
+                                places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
+/**
+ * X-Wing テクニック (列単位)
+ * ある値が正確に2つの列のみに候補として存在し、
+ * それぞれの列で同じ2つの行に位置している場合、
+ * その2つの行において他の列からその値を削除する
+ * @param places 
+ */
+export function updateCandidatesForXWingColumn(places: Place[][]): Place[][] {
+    for (let candidate = 1; candidate <= 9; candidate++) {
+        const colCandidates: Map<number, number[]> = new Map();
+        for (let col = 0; col < 9; col++) {
+            const rows: number[] = [];
+            for (let row = 0; row < 9; row++) {
+                if (places[row][col].value === null && places[row][col].candidates.includes(candidate)) {
+                    rows.push(row);
+                }
+            }
+            if (rows.length === 2) {
+                colCandidates.set(col, rows);
+            }
+        }
+
+        const cols = Array.from(colCandidates.keys());
+        for (let i = 0; i < cols.length; i++) {
+            for (let j = i + 1; j < cols.length; j++) {
+                const col1 = cols[i];
+                const col2 = cols[j];
+                const rows1 = colCandidates.get(col1)!;
+                const rows2 = colCandidates.get(col2)!;
+
+                if (rows1[0] === rows2[0] && rows1[1] === rows2[1]) {
+                    for (const row of rows1) {
+                        for (let col = 0; col < 9; col++) {
+                            if (col !== col1 && col !== col2) {
+                                places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
+/**
+ * Swordfish テクニック (行単位)
+ * ある値が正確に3つの行のみに候補として存在し、
+ * それぞれの行で同じ3つの列に位置している場合、
+ * その3つの列において他の行からその値を削除する
+ * @param places 
+ */
+export function updateCandidatesForSwordfish(places: Place[][]): Place[][] {
+    for (let candidate = 1; candidate <= 9; candidate++) {
+        const rowCandidates: Map<number, number[]> = new Map();
+        for (let row = 0; row < 9; row++) {
+            const cols: number[] = [];
+            for (let col = 0; col < 9; col++) {
+                if (places[row][col].value === null && places[row][col].candidates.includes(candidate)) {
+                    cols.push(col);
+                }
+            }
+            if (cols.length >= 2 && cols.length <= 3) {
+                rowCandidates.set(row, cols);
+            }
+        }
+
+        const rows = Array.from(rowCandidates.keys());
+        // 3つの行のSwordfishをチェック
+        for (let i = 0; i < rows.length; i++) {
+            for (let j = i + 1; j < rows.length; j++) {
+                for (let k = j + 1; k < rows.length; k++) {
+                    const row1 = rows[i];
+                    const row2 = rows[j];
+                    const row3 = rows[k];
+                    const cols1 = rowCandidates.get(row1)!;
+                    const cols2 = rowCandidates.get(row2)!;
+                    const cols3 = rowCandidates.get(row3)!;
+
+                    // 3つの行の列セットが3列以下で同じ列セットか確認
+                    const allCols = new Set([...cols1, ...cols2, ...cols3]);
+                    if (allCols.size === 3) {
+                        const colArray = Array.from(allCols);
+                        // その3つの列においてrow1, row2, row3以外から該当値を削除
+                        for (const col of colArray) {
+                            for (let row = 0; row < 9; row++) {
+                                if (row !== row1 && row !== row2 && row !== row3) {
+                                    places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
+/**
+ * Swordfish テクニック (列単位)
+ * ある値が正確に3つの列のみに候補として存在し、
+ * それぞれの列で同じ3つの行に位置している場合、
+ * その3つの行において他の列からその値を削除する
+ * @param places 
+ */
+export function updateCandidatesForSwordfishColumn(places: Place[][]): Place[][] {
+    for (let candidate = 1; candidate <= 9; candidate++) {
+        const colCandidates: Map<number, number[]> = new Map();
+        for (let col = 0; col < 9; col++) {
+            const rows: number[] = [];
+            for (let row = 0; row < 9; row++) {
+                if (places[row][col].value === null && places[row][col].candidates.includes(candidate)) {
+                    rows.push(row);
+                }
+            }
+            if (rows.length >= 2 && rows.length <= 3) {
+                colCandidates.set(col, rows);
+            }
+        }
+
+        const cols = Array.from(colCandidates.keys());
+        // 3つの列のSwordfishをチェック
+        for (let i = 0; i < cols.length; i++) {
+            for (let j = i + 1; j < cols.length; j++) {
+                for (let k = j + 1; k < cols.length; k++) {
+                    const col1 = cols[i];
+                    const col2 = cols[j];
+                    const col3 = cols[k];
+                    const rows1 = colCandidates.get(col1)!;
+                    const rows2 = colCandidates.get(col2)!;
+                    const rows3 = colCandidates.get(col3)!;
+
+                    const allRows = new Set([...rows1, ...rows2, ...rows3]);
+                    if (allRows.size === 3) {
+                        const rowArray = Array.from(allRows);
+                        for (const row of rowArray) {
+                            for (let col = 0; col < 9; col++) {
+                                if (col !== col1 && col !== col2 && col !== col3) {
+                                    places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
 export function calcPrediction(squares: string[][]): Prediction | null {
     let places = calcPlaces(squares)
     let conditions = createConditions(places)
@@ -215,6 +416,22 @@ export function calcPrediction(squares: string[][]): Prediction | null {
     // 予約（Naked Pair/Triple/Quad）による候補除去
     updateCandidatesForNakedReservations(conditions)
     result = checkPrediction(places, "NAKED_RESERVATION")
+    if (result != null) {
+        return result
+    }
+
+    // X-Wing テクニック
+    updateCandidatesForXWing(places)
+    updateCandidatesForXWingColumn(places)
+    result = checkPrediction(places, "X_WING")
+    if (result != null) {
+        return result
+    }
+
+    // Swordfish テクニック
+    updateCandidatesForSwordfish(places)
+    updateCandidatesForSwordfishColumn(places)
+    result = checkPrediction(places, "SWORDFISH")
     if (result != null) {
         return result
     }

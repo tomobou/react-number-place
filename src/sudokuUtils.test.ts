@@ -8,6 +8,10 @@ import {
     createPredictionObj,
     updateCandidatesForOverlapConditions,
     updateCandidatesForNakedReservations,
+    updateCandidatesForXWing,
+    updateCandidatesForXWingColumn,
+    updateCandidatesForSwordfish,
+    updateCandidatesForSwordfishColumn,
     Place,
     Prediction
 } from './sudokuUtils';
@@ -543,6 +547,215 @@ describe('Sudoku Solver Utilities', () => {
             // Verify board state is valid
             expect(conditions.length).toBe(27);
             expect(places.length).toBe(9);
+        });
+    });
+
+    describe('X-Wing technique', () => {
+        test('X-Wing (rows): should remove candidates when 2 rows share same 2 columns', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            // Initialize all places as empty
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up X-Wing pattern for candidate 5
+            // Row 0: candidate 5 only in cols 2 and 5
+            // Row 3: candidate 5 only in cols 2 and 5
+            for (let col = 0; col < 9; col++) {
+                if (col !== 2 && col !== 5) {
+                    places[0][col].candidates = places[0][col].candidates.filter(c => c !== 5);
+                    places[3][col].candidates = places[3][col].candidates.filter(c => c !== 5);
+                }
+            }
+
+            // Before X-Wing, candidate 5 might exist in other rows within cols 2 and 5
+            expect(places[1][2].candidates).toContain(5);
+            expect(places[1][5].candidates).toContain(5);
+
+            // Apply X-Wing
+            updateCandidatesForXWing(places);
+
+            // After X-Wing, other rows should have 5 removed from cols 2 and 5
+            for (let row = 0; row < 9; row++) {
+                if (row !== 0 && row !== 3) {
+                    expect(places[row][2].candidates).not.toContain(5);
+                    expect(places[row][5].candidates).not.toContain(5);
+                }
+            }
+        });
+
+        test('X-Wing (columns): should remove candidates when 2 columns share same 2 rows', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up X-Wing pattern for candidate 7 (column-wise)
+            // Col 1: candidate 7 only in rows 2 and 6
+            // Col 4: candidate 7 only in rows 2 and 6
+            for (let row = 0; row < 9; row++) {
+                if (row !== 2 && row !== 6) {
+                    places[row][1].candidates = places[row][1].candidates.filter(c => c !== 7);
+                    places[row][4].candidates = places[row][4].candidates.filter(c => c !== 7);
+                }
+            }
+
+            updateCandidatesForXWingColumn(places);
+
+            // Other columns should have 7 removed from rows 2 and 6
+            for (let col = 0; col < 9; col++) {
+                if (col !== 1 && col !== 4) {
+                    expect(places[2][col].candidates).not.toContain(7);
+                    expect(places[6][col].candidates).not.toContain(7);
+                }
+            }
+        });
+
+        test('should not remove candidates when X-Wing pattern is incomplete', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Incomplete X-Wing: row 0 has candidate 3 in cols 1,2,3 (3 columns, not 2)
+            for (let col = 0; col < 9; col++) {
+                if (col !== 1 && col !== 2 && col !== 3) {
+                    places[0][col].candidates = places[0][col].candidates.filter(c => c !== 3);
+                }
+            }
+
+            const originalCandidates = JSON.stringify(places[5][1].candidates);
+            updateCandidatesForXWing(places);
+
+            // Should not change since incomplete pattern
+            expect(JSON.stringify(places[5][1].candidates)).toBe(originalCandidates);
+        });
+    });
+
+    describe('Swordfish technique', () => {
+        test('Swordfish (rows): should remove candidates when 3 rows share same 3 columns', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up Swordfish pattern for candidate 4
+            // Rows 1, 4, 7: candidate 4 only in cols 3, 5, 8
+            for (const row of [1, 4, 7]) {
+                for (let col = 0; col < 9; col++) {
+                    if (col !== 3 && col !== 5 && col !== 8) {
+                        places[row][col].candidates = places[row][col].candidates.filter(c => c !== 4);
+                    }
+                }
+            }
+
+            updateCandidatesForSwordfish(places);
+
+            // Other rows should have 4 removed from cols 3, 5, 8
+            for (let row = 0; row < 9; row++) {
+                if (row !== 1 && row !== 4 && row !== 7) {
+                    expect(places[row][3].candidates).not.toContain(4);
+                    expect(places[row][5].candidates).not.toContain(4);
+                    expect(places[row][8].candidates).not.toContain(4);
+                }
+            }
+        });
+
+        test('Swordfish (columns): should remove candidates when 3 columns share same 3 rows', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up Swordfish pattern for candidate 8 (column-wise)
+            // Cols 0, 4, 8: candidate 8 only in rows 2, 5, 7
+            for (const col of [0, 4, 8]) {
+                for (let row = 0; row < 9; row++) {
+                    if (row !== 2 && row !== 5 && row !== 7) {
+                        places[row][col].candidates = places[row][col].candidates.filter(c => c !== 8);
+                    }
+                }
+            }
+
+            updateCandidatesForSwordfishColumn(places);
+
+            // Other columns should have 8 removed from rows 2, 5, 7
+            for (let col = 0; col < 9; col++) {
+                if (col !== 0 && col !== 4 && col !== 8) {
+                    expect(places[2][col].candidates).not.toContain(8);
+                    expect(places[5][col].candidates).not.toContain(8);
+                    expect(places[7][col].candidates).not.toContain(8);
+                }
+            }
+        });
+
+        test('should not remove candidates for incomplete Swordfish', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Incomplete Swordfish: only 2 rows instead of 3
+            for (const row of [0, 3]) {
+                for (let col = 0; col < 9; col++) {
+                    if (col !== 1 && col !== 4 && col !== 7) {
+                        places[row][col].candidates = places[row][col].candidates.filter(c => c !== 2);
+                    }
+                }
+            }
+
+            const originalCandidates = JSON.stringify(places[5][1].candidates);
+            updateCandidatesForSwordfish(places);
+
+            expect(JSON.stringify(places[5][1].candidates)).toBe(originalCandidates);
         });
     });
 });
