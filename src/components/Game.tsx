@@ -45,6 +45,8 @@ export class Game extends React.Component<GameProps, GameStates> {
             case "OVERLAP_CONDITIONS": return "重複排除値確定";
             case "UNIQUE_CANDIDATE": return "条件確定";
             case "NAKED_RESERVATION": return "予約排除後条件確定";
+            case "X_WING": return "X-Wing排除後条件確定";
+            case "SWORDFISH": return "Swordfish排除後条件確定";
             default: return type;
         }
     }
