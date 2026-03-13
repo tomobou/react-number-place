@@ -398,6 +398,61 @@ export function updateCandidatesForSwordfishColumn(places: Place[][]): Place[][]
     return places;
 }
 
+/**
+ * Pointing Pair/Triple テクニック
+ * ブロック内の候補が行・列に限定される場合、その行・列から候補を除外
+ * @param places 
+ */
+export function updateCandidatesForPointingPair(places: Place[][]): Place[][] {
+    // 各ブロック（9個）をチェック
+    for (let blockRow = 0; blockRow < 9; blockRow += 3) {
+        for (let blockCol = 0; blockCol < 9; blockCol += 3) {
+            // 各候補値についてチェック
+            for (let candidate = 1; candidate <= 9; candidate++) {
+                // このブロック内で該当候補値を持つセルを探す
+                const cellsWithCandidate: Place[] = [];
+                for (let row = blockRow; row < blockRow + 3; row++) {
+                    for (let col = blockCol; col < blockCol + 3; col++) {
+                        if (places[row][col].value === null && places[row][col].candidates.includes(candidate)) {
+                            cellsWithCandidate.push(places[row][col]);
+                        }
+                    }
+                }
+
+                // 候補値が2～3個のセルに限定されている場合
+                if (cellsWithCandidate.length >= 2 && cellsWithCandidate.length <= 3) {
+                    // すべてのセルが同じ行にあるか確認
+                    const rows = new Set(cellsWithCandidate.map(c => c.rowIndex));
+                    if (rows.size === 1) {
+                        // 同じ行にあるなら、その行の他のブロックから該当値を削除
+                        const row = Array.from(rows)[0];
+                        for (let col = 0; col < 9; col++) {
+                            // 同じブロック内のセルは除外
+                            if (col < blockCol || col >= blockCol + 3) {
+                                places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                            }
+                        }
+                    }
+
+                    // すべてのセルが同じ列にあるか確認
+                    const cols = new Set(cellsWithCandidate.map(c => c.colIndex));
+                    if (cols.size === 1) {
+                        // 同じ列にあるなら、その列の他のブロックから該当値を削除
+                        const col = Array.from(cols)[0];
+                        for (let row = 0; row < 9; row++) {
+                            // 同じブロック内のセルは除外
+                            if (row < blockRow || row >= blockRow + 3) {
+                                places[row][col].candidates = places[row][col].candidates.filter(c => c !== candidate);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
 export function calcPrediction(squares: string[][]): Prediction | null {
     let places = calcPlaces(squares)
     let conditions = createConditions(places)
@@ -416,6 +471,13 @@ export function calcPrediction(squares: string[][]): Prediction | null {
     // 予約（Naked Pair/Triple/Quad）による候補除去
     updateCandidatesForNakedReservations(conditions)
     result = checkPrediction(places, "NAKED_RESERVATION")
+    if (result != null) {
+        return result
+    }
+
+    // Pointing Pair/Triple テクニック
+    updateCandidatesForPointingPair(places)
+    result = checkPrediction(places, "POINTING_PAIR")
     if (result != null) {
         return result
     }

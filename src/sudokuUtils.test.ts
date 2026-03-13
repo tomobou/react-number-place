@@ -12,6 +12,7 @@ import {
     updateCandidatesForXWingColumn,
     updateCandidatesForSwordfish,
     updateCandidatesForSwordfishColumn,
+    updateCandidatesForPointingPair,
     Place,
     Prediction
 } from './sudokuUtils';
@@ -756,6 +757,146 @@ describe('Sudoku Solver Utilities', () => {
             updateCandidatesForSwordfish(places);
 
             expect(JSON.stringify(places[5][1].candidates)).toBe(originalCandidates);
+        });
+    });
+
+    describe('Pointing Pair/Triple technique', () => {
+        test('Pointing Pair (row): should remove candidates from outside block in same row', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up Pointing Pair pattern for candidate 5 in top-left block (0-2 rows, 0-2 cols)
+            // Candidate 5 only in row 0, cols 0,1 within the block
+            for (let row = 1; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    places[row][col].candidates = places[row][col].candidates.filter(c => c !== 5);
+                }
+            }
+
+            // Candidate 5 should be removed from row 0, cols 3-8
+            for (let col = 3; col < 9; col++) {
+                places[0][col].candidates = places[0][col].candidates.filter(c => c !== 5);
+            }
+
+            updateCandidatesForPointingPair(places);
+
+            // Candidate 5 should remain in row 0, cols 0-2
+            expect(places[0][0].candidates).toContain(5);
+            expect(places[0][1].candidates).toContain(5);
+        });
+
+        test('Pointing Pair (column): should remove candidates from outside block in same column', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up Pointing Pair pattern for candidate 7 in top-left block (rows 0-2, cols 0-2)
+            // Candidate 7 only in col 0, rows 0,1 within the block
+            for (let row = 0; row < 3; row++) {
+                for (let col = 1; col < 3; col++) {
+                    places[row][col].candidates = places[row][col].candidates.filter(c => c !== 7);
+                }
+            }
+
+            // Remove 7 from other blocks in col 0
+            for (let row = 3; row < 9; row++) {
+                places[row][0].candidates = places[row][0].candidates.filter(c => c !== 7);
+            }
+
+            updateCandidatesForPointingPair(places);
+
+            // Candidate 7 should remain in col 0, rows 0-1
+            expect(places[0][0].candidates).toContain(7);
+            expect(places[1][0].candidates).toContain(7);
+        });
+
+        test('Pointing Pair (single cell): should handle pointing single pattern', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up pattern where candidate 3 is only in one cell of top-left block
+            // In top-left block (rows 0-2, cols 0-2), only place[0][0] has candidate 3
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (i !== 0 || j !== 0) {
+                        places[i][j].candidates = places[i][j].candidates.filter(c => c !== 3);
+                    }
+                }
+            }
+
+            // Remove 3 from outside block in row 0
+            for (let col = 3; col < 9; col++) {
+                places[0][col].candidates = places[0][col].candidates.filter(c => c !== 3);
+            }
+
+            updateCandidatesForPointingPair(places);
+
+            // Candidate 3 should remain in place[0][0]
+            expect(places[0][0].candidates).toContain(3);
+        });
+
+        test('should not modify when candidates are not in single row or column', () => {
+            const places: Place[][] = Array(9).fill(null).map(() => Array(9).fill(null));
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    places[i][j] = {
+                        value: null,
+                        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                        rowIndex: i,
+                        colIndex: j
+                    };
+                }
+            }
+
+            // Set up pattern where candidate 6 is in rows 0,1 cols 0,1 (scattered, not single row/col)
+            for (let row = 2; row < 9; row++) {
+                for (let col = 0; col < 3; col++) {
+                    places[row][col].candidates = places[row][col].candidates.filter(c => c !== 6);
+                }
+            }
+            for (let col = 3; col < 9; col++) {
+                places[0][col].candidates = places[0][col].candidates.filter(c => c !== 6);
+                places[1][col].candidates = places[1][col].candidates.filter(c => c !== 6);
+            }
+
+            const originalCandidate0_3 = JSON.stringify(places[0][3].candidates);
+            const originalCandidate1_3 = JSON.stringify(places[1][3].candidates);
+            
+            updateCandidatesForPointingPair(places);
+
+            // Should not remove more candidates when scattered
+            expect(JSON.stringify(places[0][3].candidates)).toBe(originalCandidate0_3);
+            expect(JSON.stringify(places[1][3].candidates)).toBe(originalCandidate1_3);
         });
     });
 });
