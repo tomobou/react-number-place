@@ -399,6 +399,73 @@ export function updateCandidatesForSwordfishColumn(places: Place[][]): Place[][]
 }
 
 /**
+ * Box/Line Reduction (Box-Line Reduction) テクニック
+ * あるブロック内で候補が特定の行（または列）に限定される場合、
+ * その行（列）にある他のブロック内のセルから同じ候補を除去する。
+ * 例えば、ブロック内で候補 5 が行 2 のセルにのみ現れるなら、
+ * 行 2 の他のブロックにあるセルから 5 を除去する。
+ * 同様に列に限定されるケースも処理する。
+ *
+ * @param places 9x9 Place 配列
+ * @returns 更新後の places
+ */
+export function updateCandidatesForBoxLineReduction(places: Place[][]): Place[][] {
+    // 行に限定されるケース
+    for (let blockRow = 0; blockRow < 3; blockRow++) {
+        for (let blockCol = 0; blockCol < 3; blockCol++) {
+            // ブロック内のセルを取得
+            const blockCells: Place[] = [];
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    blockCells.push(places[blockRow * 3 + r][blockCol * 3 + c]);
+                }
+            }
+            // 候補ごとに行の分布を調べる
+            const candidateRows = new Map<number, Set<number>>();
+            for (const cell of blockCells) {
+                for (const cand of cell.candidates) {
+                    if (!candidateRows.has(cand)) candidateRows.set(cand, new Set());
+                    candidateRows.get(cand)!.add(cell.rowIndex);
+                }
+            }
+            for (const [cand, rows] of candidateRows.entries()) {
+                if (rows.size === 1) {
+                    const targetRow = Array.from(rows)[0];
+                    // その行のブロック外のセルから cand を除去
+                    for (let col = 0; col < 9; col++) {
+                        const cell = places[targetRow][col];
+                        // ブロック外かつ候補に含まれる場合
+                        if (cell.candidates.includes(cand) && !(cell.rowIndex >= blockRow * 3 && cell.rowIndex < blockRow * 3 + 3 && cell.colIndex >= blockCol * 3 && cell.colIndex < blockCol * 3 + 3)) {
+                            cell.candidates = cell.candidates.filter(c => c !== cand);
+                        }
+                    }
+                }
+            }
+            // 列に限定されるケース
+            const candidateCols = new Map<number, Set<number>>();
+            for (const cell of blockCells) {
+                for (const cand of cell.candidates) {
+                    if (!candidateCols.has(cand)) candidateCols.set(cand, new Set());
+                    candidateCols.get(cand)!.add(cell.colIndex);
+                }
+            }
+            for (const [cand, cols] of candidateCols.entries()) {
+                if (cols.size === 1) {
+                    const targetCol = Array.from(cols)[0];
+                    for (let row = 0; row < 9; row++) {
+                        const cell = places[row][targetCol];
+                        if (cell.candidates.includes(cand) && !(cell.rowIndex >= blockRow * 3 && cell.rowIndex < blockRow * 3 + 3 && cell.colIndex >= blockCol * 3 && cell.colIndex < blockCol * 3 + 3)) {
+                            cell.candidates = cell.candidates.filter(c => c !== cand);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return places;
+}
+
+/**
  * Pointing Pair/Triple テクニック
  * ブロック内の候補が行・列に限定される場合、その行・列から候補を除外
  * @param places 
