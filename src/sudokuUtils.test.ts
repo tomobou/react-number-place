@@ -65,6 +65,43 @@ describe('Sudoku Solver Utilities', () => {
         });
     });
 
+    describe('updateCandidatesForBoxLineReduction', () => {
+        test('should remove candidate from row outside block when limited to a row within block', () => {
+            // Create empty board
+            const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+            const places = calcPlaces(squares);
+            // Initialize all cells with candidates 5 and 6
+            places.forEach(row => row.forEach(cell => cell.candidates = [5, 6]));
+            // In block (0,0), set first row cells to only candidate 5
+            places[0][0].candidates = [5];
+            places[0][1].candidates = [5];
+            places[0][2].candidates = [5];
+            // Apply Box/Line Reduction
+            updateCandidatesForBoxLineReduction(places);
+            // Cells in row 0 outside block should no longer contain 5
+            for (let col = 3; col < 9; col++) {
+                expect(places[0][col].candidates).not.toContain(5);
+                expect(places[0][col].candidates).toEqual([6]);
+            }
+        });
+
+        test('should remove candidate from column outside block when limited to a column within block', () => {
+            const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
+            const places = calcPlaces(squares);
+            places.forEach(row => row.forEach(cell => cell.candidates = [5, 6]));
+            // In block (0,0), set first column cells to only candidate 5
+            places[0][0].candidates = [5];
+            places[1][0].candidates = [5];
+            places[2][0].candidates = [5];
+            updateCandidatesForBoxLineReduction(places);
+            // Cells in column 0 outside block should no longer contain 5
+            for (let row = 3; row < 9; row++) {
+                expect(places[row][0].candidates).not.toContain(5);
+                expect(places[row][0].candidates).toEqual([6]);
+            }
+        });
+    });
+
     describe('createConditions', () => {
         test('should create 27 conditions (9 rows + 9 columns + 9 blocks)', () => {
             const squares = Array(9).fill(null).map(() => Array(9).fill(' '));
