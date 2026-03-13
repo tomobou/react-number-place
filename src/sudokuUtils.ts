@@ -520,6 +520,88 @@ export function updateCandidatesForPointingPair(places: Place[][]): Place[][] {
     return places;
 }
 
+/**
+ * Coloring (2-Color Coloring) テクニック
+ * ある候補の値を持つセルをグラフとして見て、同じ行・列・ブロック内のセルは相互に競合する関係にあります。
+ * このグラフを2色で塗り分けることで、矛盾を検出し、セルを除去できます。
+ * グラフが2-colorableでない（矛盾がある）場合、その候補値は解から排除できます。
+ * 
+ * @param places 9x9 Place 配列
+ * @returns 更新後の places
+ */
+export function updateCandidatesForColoring(places: Place[][]): Place[][] {
+    for (let candidate = 1; candidate <= 9; candidate++) {
+        // 候補値を持つセルを取得
+        const cellsWithCandidate: Place[] = [];
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (places[i][j].candidates.includes(candidate)) {
+                    cellsWithCandidate.push(places[i][j]);
+                }
+            }
+        }
+
+        if (cellsWithCandidate.length < 2) continue;
+
+        // グラフの隣接行列を構築
+        const n = cellsWithCandidate.length;
+        const adj: boolean[][] = Array(n).fill(null).map(() => Array(n).fill(false));
+
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const cell1 = cellsWithCandidate[i];
+                const cell2 = cellsWithCandidate[j];
+
+                // 同じ行・列・ブロック内なら競合関係あり（エッジを張る）
+                const sameRow = cell1.rowIndex === cell2.rowIndex;
+                const sameCol = cell1.colIndex === cell2.colIndex;
+                const sameBlock = Math.floor(cell1.rowIndex / 3) === Math.floor(cell2.rowIndex / 3) &&
+                                  Math.floor(cell1.colIndex / 3) === Math.floor(cell2.colIndex / 3);
+
+                if (sameRow || sameCol || sameBlock) {
+                    adj[i][j] = true;
+                    adj[j][i] = true;
+                }
+            }
+        }
+
+        // グラフの2-coloringを試みる（BFS）
+        const color: number[] = Array(n).fill(-1);
+        let is2Colorable = true;
+
+        for (let start = 0; start < n && is2Colorable; start++) {
+            if (color[start] === -1) {
+                const queue = [start];
+                color[start] = 0;
+
+                while (queue.length > 0 && is2Colorable) {
+                    const u = queue.shift()!;
+                    for (let v = 0; v < n; v++) {
+                        if (adj[u][v]) {
+                            if (color[v] === -1) {
+                                color[v] = 1 - color[u];
+                                queue.push(v);
+                            } else if (color[v] === color[u]) {
+                                // 同じ色が隣接している→矛盾
+                                is2Colorable = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2-colorableでない場合、この候補は矛盾を生じるので削除
+        if (!is2Colorable) {
+            for (const cell of cellsWithCandidate) {
+                cell.candidates = cell.candidates.filter(c => c !== candidate);
+            }
+        }
+    }
+    return places;
+}
+
 export function calcPrediction(squares: string[][]): Prediction | null {
     let places = calcPlaces(squares)
     let conditions = createConditions(places)
@@ -549,6 +631,13 @@ export function calcPrediction(squares: string[][]): Prediction | null {
         return result
     }
 
+    // Box/Line Reduction テクニック
+    updateCandidatesForBoxLineReduction(places)
+    result = checkPrediction(places, "BOX_LINE_REDUCTION")
+    if (result != null) {
+        return result
+    }
+
     // X-Wing テクニック
     updateCandidatesForXWing(places)
     updateCandidatesForXWingColumn(places)
@@ -561,6 +650,13 @@ export function calcPrediction(squares: string[][]): Prediction | null {
     updateCandidatesForSwordfish(places)
     updateCandidatesForSwordfishColumn(places)
     result = checkPrediction(places, "SWORDFISH")
+    if (result != null) {
+        return result
+    }
+
+    // Coloring テクニック
+    updateCandidatesForColoring(places)
+    result = checkPrediction(places, "COLORING")
     if (result != null) {
         return result
     }
