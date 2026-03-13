@@ -13,6 +13,7 @@ import {
     updateCandidatesForSwordfish,
     updateCandidatesForSwordfishColumn,
     updateCandidatesForPointingPair,
+    updateCandidatesForBoxLineReduction,
     Place,
     Prediction
 } from './sudokuUtils';
@@ -76,6 +77,13 @@ describe('Sudoku Solver Utilities', () => {
             places[0][0].candidates = [5];
             places[0][1].candidates = [5];
             places[0][2].candidates = [5];
+            // Ensure other cells in block (0,0) don't have candidate 5
+            places[1][0].candidates = [6];
+            places[1][1].candidates = [6];
+            places[1][2].candidates = [6];
+            places[2][0].candidates = [6];
+            places[2][1].candidates = [6];
+            places[2][2].candidates = [6];
             // Apply Box/Line Reduction
             updateCandidatesForBoxLineReduction(places);
             // Cells in row 0 outside block should no longer contain 5
@@ -93,6 +101,13 @@ describe('Sudoku Solver Utilities', () => {
             places[0][0].candidates = [5];
             places[1][0].candidates = [5];
             places[2][0].candidates = [5];
+            // Ensure other cells in block (0,0) don't have candidate 5
+            places[0][1].candidates = [6];
+            places[0][2].candidates = [6];
+            places[1][1].candidates = [6];
+            places[1][2].candidates = [6];
+            places[2][1].candidates = [6];
+            places[2][2].candidates = [6];
             updateCandidatesForBoxLineReduction(places);
             // Cells in column 0 outside block should no longer contain 5
             for (let row = 3; row < 9; row++) {
