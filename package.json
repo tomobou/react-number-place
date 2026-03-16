@@ -16,6 +16,10 @@
         "build": "tsc --noEmit && vite build",
         "serve": "vite preview",
         "test": "jest",
+        "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
+        "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
+        "format": "prettier --write src/**/*.{js,jsx,ts,tsx}",
+        "format:check": "prettier --check src/**/*.{js,jsx,ts,tsx}",
         "predeploy": "tsc --noEmit && vite build --mode github",
         "deploy": "gh-pages -d build"
     },
@@ -38,11 +42,19 @@
     "devDependencies": {
         "@testing-library/jest-dom": "^6.9.1",
         "@testing-library/react": "^16.3.2",
+        "@typescript-eslint/eslint-plugin": "^8.57.0",
+        "@typescript-eslint/parser": "^8.57.0",
         "@vitejs/plugin-react": "^5.0.0",
+        "eslint": "^9.39.4",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-jest": "^29.15.0",
+        "eslint-plugin-prettier": "^5.5.5",
+        "eslint-plugin-react": "^7.37.5",
         "gh-pages": "^6.3.0",
         "identity-obj-proxy": "^3.0.0",
         "jest": "^30.0.5",
         "jest-environment-jsdom": "^30.2.0",
+        "prettier": "^3.8.1",
         "ts-jest": "^29.4.6",
         "vite": "^7.1.2"
     }
