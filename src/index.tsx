@@ -5,9 +5,8 @@ import { Game } from './components/Game';
 
 const container = document.getElementById('root');
 if (container) {
-    const root = createRoot(container);
-    root.render(<Game />);
+  const root = createRoot(container);
+  root.render(<Game />);
 } else {
-    console.error('Root container not found');
+  console.error('Root container not found');
 }
-

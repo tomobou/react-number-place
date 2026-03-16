@@ -31,25 +31,26 @@
 windows環境に　wingetというms標準のパッケージ管理ソフトがあることを知ったため使用して、Node.jsをインストール。
 
 ```
-> winget search Node.js 
-名前          ID                バージョン 一致         ソース                                                                                                 
+> winget search Node.js
+名前          ID                バージョン 一致         ソース
 --------------------------------------------------------------
 Node.js       OpenJS.NodeJS     24.6.0                  winget
 Nodist        Nodist.Nodist     0.10.3     Tag: node.js winget
 Volta         Volta.Volta       2.0.2      Tag: node.js winget
-Node.js (LTS) OpenJS.NodeJS.LTS 22.18.0                 winget  
+Node.js (LTS) OpenJS.NodeJS.LTS 22.18.0                 winget
 
 ```
 
 ```
-> winget install Node.js   
+> winget install Node.js
 ```
 
 ※npmにパスが通らなかったので、ターミナル再起動。
 
 type script は共通で使用すると思ったので、global installした。
+
 ```
-npm install -g typescript 
+npm install -g typescript
 ```
 
 ### node version
@@ -58,12 +59,12 @@ npm install -g typescript
 > node -v
 v24.6.0
 
-> npm -v       
+> npm -v
 11.5.1
 ```
 
-
 ## 動作
+
 github pagesで動作させるようにしています。
 
 - https://tomobou.github.io/react-number-place/
@@ -71,5 +72,5 @@ github pagesで動作させるようにしています。
 ## 参考
 
 github pages への公開の仕方などを参考にさせていただきました。
-- https://qiita.com/EisKern/items/15dcf7864fa49df8f247
 
+- https://qiita.com/EisKern/items/15dcf7864fa49df8f247

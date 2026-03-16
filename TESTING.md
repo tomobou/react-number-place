@@ -11,9 +11,11 @@ npm test
 ## テストファイル構成
 
 ### 1. `src/sudokuUtils.ts`
+
 数学ロジック関数を外部ファイルに抽出したユーティリティモジュール。
 
-### 2. `src/sudokuUtils.test.ts` 
+### 2. `src/sudokuUtils.test.ts`
+
 数学ロジックのテストスイート（52個のテスト）
 
 - **calcPlaces**: マス目の文字列配列をPlace オブジェクトに変換
@@ -43,6 +45,7 @@ npm test
   - 複雑なシナリオで予測を見つけることを確認
 
 ### 3. `src/components.test.tsx`
+
 Reactコンポーネントのテストスイート（52個のテスト）
 
 - **Square Component**: 個別のマス目を表すボタン
