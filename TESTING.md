@@ -75,13 +75,56 @@ Reactコンポーネントのテストスイート（52個のテスト）
 2. **統合テスト**: 複数の関数を組み合わせたテスト
 3. **実装テスト**: ユーザーの視点からのテスト
 
-## テストの実行結果
+## E2E テスト（Playwright）
+
+エンドツーエンドテストは Playwright を使用して実装されています。
+
+### E2E テストの実行
+
+```bash
+# headless モードでテストを実行
+npm run test:e2e
+
+# UI モードで対話的にテストを実行
+npm run test:e2e:ui
+
+# テストレポートを表示
+npx playwright show-report
+```
+
+### E2E テストの設定
+
+- **Headless モード**: 自動化されたCI/CDワークフローに最適化
+- **スクリーンショット**: テスト失敗時に自動キャプチャ（`test-results/`に保存）
+- **ビデオ録画**: テスト失敗時に自動記録（`test-results/`に保存）
+- **トレース**: 失敗時の詳細なトレース情報を記録
+- **HTML レポート**: テスト結果の詳細なレポートを生成
+
+### テストファイル
+
+- **`tests/example.spec.ts`**: 基本的なゲーム機能のテスト
+  - ページタイトルの確認
+  - ゲームボードの表示確認
+  - ゲーム操作とのインタラクション
+  - ページロード時のエラーチェック
+  - ボード要素の数の検証
+
+### テスト結果の確認
+
+テスト失敗時のスクリーンショットとビデオは以下のディレクトリに保存されます：
+- スクリーンショット: `test-results/example-[test-name]-chromium/`
+- ビデオ: `test-results/example-[test-name]-chromium/video.webm`
+
+## テスト実行の結果
 
 ```
 Test Suites: 2 passed, 2 total
 Tests:       52 passed, 52 total
 Snapshots:   0 total
 Time:        0.846 s
+
+E2E Tests:   5 passed
+Time:        6.5 s
 ```
 
 ## 今後の拡張
@@ -93,3 +136,5 @@ Time:        0.846 s
 3. localStorage の機能テスト
 4. エッジケースのテスト
 5. スナップショットテスト
+6. マルチブラウザテスト（Firefox、Safari）
+7. モバイルビューポートのテスト

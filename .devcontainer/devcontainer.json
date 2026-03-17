@@ -8,16 +8,31 @@
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1.1.0": {}
-	}
+	},
+	"forwardPorts": [3000, 9323],
+	"portsAttributes": {
+		"3000": {
+			"label": "3000"
+		},
+		"9323": {
+			"label": "9323"
+		}
+	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "yarn install",
-
+	"postCreateCommand": "cd /workspaces/react-number-place && npx playwright install chromium && npx playwright install-deps",
+	// Use 'postStartCommand' to run commands after the container starts.
+	"postStartCommand": "cd /workspaces/react-number-place && npx playwright install-deps",
 	// Configure tool-specific properties.
-	// "customizations": {},
+	"customizations": {
+		"vscode": {
+		"extensions": ["ms-playwright.playwright"]
+		}
+	}
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"

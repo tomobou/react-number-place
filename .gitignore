@@ -3,3 +3,5 @@ build
 coverage
 
 .claude/*local.json
+
+test-results/*
