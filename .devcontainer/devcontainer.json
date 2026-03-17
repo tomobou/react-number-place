@@ -12,10 +12,10 @@
 	"forwardPorts": [3000, 9323],
 	"portsAttributes": {
 		"3000": {
-			"label": "3000"
+			"label": "node server"
 		},
 		"9323": {
-			"label": "9323"
+			"label": "playwright inspector"
 		}
 	},
 
@@ -27,6 +27,7 @@
 	"postCreateCommand": "cd /workspaces/react-number-place && npx playwright install chromium && npx playwright install-deps",
 	// Use 'postStartCommand' to run commands after the container starts.
 	"postStartCommand": "cd /workspaces/react-number-place && npx playwright install-deps",
+	
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
