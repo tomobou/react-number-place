@@ -3,3 +3,6 @@ build
 coverage
 
 .claude/*local.json
+
+playwright-report/*
+test-results/*
