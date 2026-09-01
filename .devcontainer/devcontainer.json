@@ -7,7 +7,7 @@
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1.1.0": {}
+		"ghcr.io/devcontainers/features/github-cli:1.1.2": {}
 	},
 	"forwardPorts": [3000, 9323],
 	"portsAttributes": {
